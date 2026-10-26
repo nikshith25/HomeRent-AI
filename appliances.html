@@ -1,0 +1,1781 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="description" content="HomeRent AI is a premium AI-based rental management system for household appliances. Rent high-end smart refrigerators, washing machines, and more with AI recommendations.">
+  <title>HomeRent AI | AI-Based Premium Household Appliance Rentals</title>
+  <link rel="stylesheet" href="styles.css">
+  <style>
+    /* AI Chat Widget */
+    .ai-chat-widget {
+      position: fixed;
+      bottom: 30px;
+      left: 30px;
+      z-index: 300;
+      font-family: inherit;
+    }
+    .ai-chat-btn {
+      width: 60px;
+      height: 60px;
+      border-radius: 50%;
+      background: var(--accent-primary);
+      color: var(--bg-secondary);
+      box-shadow: var(--shadow-lg);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      position: relative;
+      transition: var(--transition-normal);
+      border: 1px solid var(--accent-gold);
+    }
+    .ai-chat-btn:hover {
+      transform: scale(1.05);
+    }
+    .ai-badge {
+      position: absolute;
+      top: -5px;
+      right: -5px;
+      background: var(--accent-gold);
+      color: var(--text-primary);
+      font-size: 0.7rem;
+      font-weight: 700;
+      padding: 2px 6px;
+      border-radius: 10px;
+      border: 1px solid var(--bg-secondary);
+    }
+    .ai-chat-panel {
+      position: absolute;
+      bottom: 75px;
+      left: 0;
+      width: 350px;
+      height: 450px;
+      border-radius: 20px;
+      box-shadow: var(--shadow-lg);
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+      transform: translateY(20px);
+      opacity: 0;
+      pointer-events: none;
+      transition: var(--transition-normal);
+      border: 1px solid var(--border-color);
+      background: var(--glass-bg);
+      backdrop-filter: blur(12px);
+    }
+    .ai-chat-panel.open {
+      transform: translateY(0);
+      opacity: 1;
+      pointer-events: auto;
+    }
+    .ai-chat-header {
+      background: var(--accent-primary);
+      color: var(--bg-secondary);
+      padding: 1rem;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+    .ai-chat-header h3 {
+      font-size: 1.1rem;
+      margin: 0;
+      color: var(--bg-secondary);
+    }
+    .ai-chat-body {
+      flex-grow: 1;
+      padding: 1rem;
+      overflow-y: auto;
+      display: flex;
+      flex-direction: column;
+      gap: 0.8rem;
+    }
+    .ai-msg {
+      max-width: 80%;
+      padding: 0.8rem 1rem;
+      border-radius: 16px;
+      font-size: 0.85rem;
+      line-height: 1.4;
+    }
+    .ai-msg.bot {
+      background: var(--bg-tertiary);
+      color: var(--text-primary);
+      align-self: flex-start;
+      border-bottom-left-radius: 4px;
+    }
+    .ai-msg.user {
+      background: var(--accent-primary);
+      color: var(--bg-secondary);
+      align-self: flex-end;
+      border-bottom-right-radius: 4px;
+    }
+    .ai-options {
+      display: flex;
+      flex-direction: column;
+      gap: 0.4rem;
+      margin-top: 0.5rem;
+    }
+    .ai-opt-btn {
+      text-align: left;
+      background: var(--bg-secondary);
+      border: 1px solid var(--border-color);
+      padding: 0.5rem 0.8rem;
+      border-radius: 10px;
+      font-size: 0.8rem;
+      cursor: pointer;
+      transition: var(--transition-normal);
+    }
+    .ai-opt-btn:hover {
+      background: rgba(30, 63, 32, 0.05);
+      border-color: var(--accent-primary);
+    }
+    .ai-chat-footer {
+      padding: 0.8rem;
+      border-top: 1px solid var(--border-color);
+      display: flex;
+      gap: 0.5rem;
+    }
+    .ai-chat-footer input {
+      flex-grow: 1;
+    }
+    
+    /* Recommendation Card inside AI Chat */
+    .ai-rec-card {
+      background: var(--bg-secondary);
+      border: 1px solid var(--border-color);
+      border-radius: 12px;
+      padding: 0.6rem;
+      margin-top: 0.5rem;
+      display: flex;
+      gap: 0.6rem;
+      align-items: center;
+    }
+    .ai-rec-card img {
+      width: 50px;
+      height: 50px;
+      object-fit: cover;
+      border-radius: 8px;
+    }
+    .ai-rec-info {
+      flex-grow: 1;
+    }
+    .ai-rec-title {
+      font-size: 0.8rem;
+      font-weight: 600;
+      margin-bottom: 0.2rem;
+    }
+    .ai-rec-price {
+      font-size: 0.75rem;
+      color: var(--accent-gold);
+      font-weight: 600;
+    }
+    .ai-rec-btn {
+      background: var(--accent-primary);
+      color: white;
+      font-size: 0.7rem;
+      padding: 0.3rem 0.6rem;
+      border-radius: 6px;
+      cursor: pointer;
+    }
+
+    /* Admin dashboard layouts */
+    .admin-metrics {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 1.5rem;
+      margin-bottom: 2.5rem;
+    }
+    .admin-content-section {
+      display: none;
+      animation: fadeIn 0.4s forwards;
+    }
+    .admin-content-section.active {
+      display: block;
+    }
+    
+    /* Bookings list */
+    .bookings-list {
+      display: flex;
+      flex-direction: column;
+      gap: 1rem;
+    }
+    .booking-card {
+      border: 1px solid var(--border-color);
+      background: var(--bg-secondary);
+      border-radius: 16px;
+      padding: 1.5rem;
+      display: grid;
+      grid-template-columns: 1.5fr 1.5fr 1fr 1fr;
+      align-items: center;
+      gap: 1rem;
+    }
+    .booking-header h4 {
+      font-size: 1rem;
+      margin-bottom: 0.2rem;
+    }
+    .booking-header p {
+      font-size: 0.8rem;
+      color: var(--text-secondary);
+    }
+    .booking-details {
+      font-size: 0.85rem;
+    }
+    .booking-price {
+      font-weight: 600;
+      color: var(--accent-gold);
+    }
+    .booking-status {
+      font-size: 0.8rem;
+      font-weight: 600;
+      padding: 0.4rem 0.8rem;
+      border-radius: 20px;
+      text-align: center;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+    }
+    .booking-status.pending {
+      background: rgba(197, 160, 89, 0.1);
+      color: var(--accent-gold);
+    }
+    .booking-status.active {
+      background: rgba(30, 63, 32, 0.1);
+      color: var(--accent-primary);
+    }
+    
+    @media (max-width: 768px) {
+      .admin-metrics {
+        grid-template-columns: 1fr;
+      }
+      .booking-card {
+        grid-template-columns: 1fr;
+        gap: 0.5rem;
+      }
+      .ai-chat-panel {
+        width: calc(100vw - 60px);
+        height: 400px;
+      }
+    }
+  </style>
+</head>
+<body>
+
+  <!-- --- HEADER & NAVIGATION --- -->
+  <header>
+    <div class="container">
+      <nav class="nav-wrapper glass-panel">
+        <a href="#" class="logo" id="nav-logo">
+          <!-- House Smart Tech SVG -->
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="28" height="28" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/>
+            <polyline points="9 22 9 12 15 12 15 22"/>
+          </svg>
+          HomeRent AI
+        </a>
+
+        <ul class="nav-links" id="main-nav-links">
+          <li><a href="home.html" id="nav-link-home">Home</a></li>
+          <li><a href="appliances.html" class="active" id="nav-link-shop">Appliances</a></li>
+          <li><a href="dashboard.html" id="nav-link-values">Dashboard</a></li>
+        </ul>
+
+        <div class="nav-actions">
+          <!-- Login / Profile Button Container -->
+          <div id="auth-nav-container">
+            <a href="login.html" id="nav-login-btn" class="btn-primary" style="padding: 0.5rem 1rem; border-radius: 20px; font-size: 0.8rem; font-weight: 600; display: flex; align-items: center; gap: 0.4rem; text-decoration: none;">
+              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M15 3h4a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2h-4"></path>
+                <polyline points="10 17 15 12 10 7"></polyline>
+                <line x1="15" y1="12" x2="3" y2="12"></line>
+              </svg>
+              <span>Sign In</span>
+            </a>
+            <div id="nav-user-profile" style="display: none; align-items: center; gap: 0.8rem;">
+              <div class="user-badge-pill" id="user-pill-display" style="padding: 0.4rem 0.8rem; border-radius: 20px; font-size: 0.8rem; font-weight: 600; background: var(--bg-tertiary); border: 1px solid var(--border-color); display: flex; align-items: center; gap: 0.4rem;">
+                <span id="user-role-badge" style="background: var(--accent-primary); color: white; padding: 2px 6px; border-radius: 10px; font-size: 0.65rem; text-transform: uppercase;">Customer</span>
+                <span id="user-name-display">Aarav</span>
+              </div>
+              <button id="nav-logout-btn" class="btn-secondary" style="padding: 0.5rem 1rem; border-radius: 20px; font-size: 0.8rem; font-weight: 600; border: 1px solid var(--border-color); display: flex; align-items: center; gap: 0.4rem; cursor: pointer; transition: all 0.3s;">
+                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                  <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"></path>
+                  <polyline points="16 17 21 12 16 7"></polyline>
+                  <line x1="21" y1="12" x2="9" y2="12"></line>
+                </svg>
+                <span>Log Out</span>
+              </button>
+            </div>
+          </div>
+
+          <!-- Vendor Add Appliance Button (Vendor Only) -->
+          <button id="nav-add-appliance-btn" class="btn-primary" style="display: none; padding: 0.5rem 1rem; border-radius: 20px; font-size: 0.8rem; font-weight: 600; align-items: center; gap: 0.4rem; background: var(--accent-gold); color: #1c221e;">
+            <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+              <line x1="12" y1="5" x2="12" y2="19"></line>
+              <line x1="5" y1="12" x2="19" y2="12"></line>
+            </svg>
+            <span>+ Add Appliance</span>
+          </button>
+
+          <!-- Portal Toggle Button -->
+          <button id="portal-toggle" class="btn-secondary" style="padding: 0.5rem 1rem; border-radius: 20px; font-size: 0.8rem; font-weight: 600; border: 1px solid var(--border-color); display: flex; align-items: center; gap: 0.4rem;">
+            <span>Vendor Console</span>
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path>
+              <circle cx="12" cy="7" r="4"></circle>
+            </svg>
+          </button>
+
+          <!-- Theme Toggle Button -->
+          <button id="theme-toggle" class="icon-btn" aria-label="Toggle Theme">
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather feather-sun moon-icon">
+              <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path>
+            </svg>
+          </button>
+
+          <!-- Shopping Cart Icon Button -->
+          <button id="cart-toggle" class="icon-btn" aria-label="Open Shopping Cart">
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather feather-shopping-cart">
+              <circle cx="9" cy="21" r="1"></circle>
+              <circle cx="20" cy="21" r="1"></circle>
+              <path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6"></path>
+            </svg>
+            <span id="cart-count" class="badge">0</span>
+          </button>
+        </div>
+      </nav>
+    </div>
+  </header>
+
+  <!-- --- CUSTOMER PORTAL WRAPPER --- -->
+  <div id="customer-portal-view">
+
+    <!-- --- SHOP CATALOG --- -->
+    <section class="catalog" id="shop">
+      <div class="container">
+        <div class="section-header">
+          <h2>Premium Appliances Catalog</h2>
+          <p>Browse our selection of highly rated, energy-efficient smart appliances, curated for modern homes.</p>
+        </div>
+
+        <!-- Amazon Universal Search Bar & Delivery Pincode Widget -->
+        <div class="amazon-search-bar">
+          <div class="pincode-widget">
+            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>
+            <span>Deliver to:</span>
+            <strong id="pincode-display">Bengaluru 560102</strong>
+            <button id="change-pincode-btn" class="pincode-change-btn">Change</button>
+          </div>
+
+          <div class="amazon-search-input-wrapper">
+            <select id="header-category-select" class="header-category-select">
+              <option value="all">All Categories</option>
+              <option value="kitchen">Kitchen</option>
+              <option value="laundry">Laundry</option>
+              <option value="climate">Climate Control</option>
+              <option value="living">Smart Living</option>
+            </select>
+            <input type="text" id="amazon-search-input" placeholder="Search appliances, refrigerators, ACs, washing machines..." />
+            <button id="amazon-search-btn" class="amazon-search-btn" aria-label="Search">
+              <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+            </button>
+          </div>
+        </div>
+
+        <!-- Controls (Filter tabs & Sorting) -->
+        <div class="catalog-controls">
+          <div class="filter-tabs" id="filter-tabs">
+            <button class="filter-tab active" data-category="all">All Appliances</button>
+            <button class="filter-tab" data-category="kitchen">Kitchen</button>
+            <button class="filter-tab" data-category="laundry">Laundry</button>
+            <button class="filter-tab" data-category="climate">Climate Control</button>
+            <button class="filter-tab" data-category="living">Smart Living</button>
+          </div>
+
+          <div style="display: flex; gap: 1rem; align-items: center; flex-wrap: wrap;">
+            <div class="sort-wrapper">
+              <label for="distance-filter-select">Distance</label>
+              <select id="distance-filter-select" class="sort-select">
+                <option value="all">All Distances</option>
+                <option value="1">Within 1 km</option>
+                <option value="5">Within 5 km</option>
+                <option value="10">Within 10 km</option>
+                <option value="20">Within 20 km</option>
+                <option value="50">Within 50 km</option>
+              </select>
+            </div>
+
+            <div class="sort-wrapper">
+              <label for="sort-select">Sort By</label>
+              <select id="sort-select" class="sort-select">
+                <option value="featured">Featured</option>
+                <option value="nearest">Nearest to Me</option>
+                <option value="farthest">Farthest Away</option>
+                <option value="price-low">Price: Low to High</option>
+                <option value="price-high">Price: High to Low</option>
+                <option value="rating">Best Rated</option>
+              </select>
+            </div>
+          </div>
+        </div>
+
+        <!-- Location Notice / Status Banner -->
+        <div id="location-notice-banner" style="display: none; margin-bottom: 2rem; padding: 0.85rem 1.25rem; border-radius: 14px; background: rgba(30, 63, 32, 0.08); border: 1px solid var(--border-color); align-items: center; justify-content: space-between; font-size: 0.88rem; gap: 1rem; flex-wrap: wrap;">
+          <div style="display: flex; align-items: center; gap: 0.65rem;">
+            <span style="font-size: 1.25rem; line-height: 1;">📍</span>
+            <span id="location-notice-text">Location access enabled. Showing calculated distances from your location.</span>
+          </div>
+          <button id="enable-location-btn" class="btn-secondary" style="display: none; padding: 0.4rem 0.9rem; font-size: 0.8rem; border-radius: 10px; font-weight: 600; cursor: pointer;">Enable Location</button>
+        </div>
+
+        <!-- Products Grid -->
+        <div class="products-grid" id="products-grid">
+          <!-- Products will be generated dynamically by JavaScript -->
+        </div>
+      </div>
+    </section>
+  </div>
+
+  <!-- --- VENDOR/ADMINISTRATOR PORTAL --- -->
+  <section class="catalog" id="vendor-console" style="display: none; padding-top: 120px; min-height: 80vh;">
+    <div class="container">
+      <div class="section-header">
+        <h2>Vendor Console</h2>
+        <p>Manage appliance inventory, monitor active customer rentals, and view earnings insights.</p>
+      </div>
+
+      <!-- Metrics Dashboard -->
+      <div class="admin-metrics">
+        <div class="value-card">
+          <div class="value-icon">
+            <svg xmlns="http://www.w3.org/2000/svg" width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <line x1="12" y1="1" x2="12" y2="23"></line>
+              <path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"></path>
+            </svg>
+          </div>
+          <h3>Monthly Earnings</h3>
+          <p id="admin-revenue" style="font-size: 1.8rem; font-weight: 700; color: var(--accent-primary); margin-top: 0.5rem;">₹0.00</p>
+        </div>
+
+        <div class="value-card">
+          <div class="value-icon">
+            <svg xmlns="http://www.w3.org/2000/svg" width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <rect x="3" y="4" width="18" height="18" rx="2" ry="2"/>
+              <line x1="16" y1="2" x2="16" y2="6"/>
+              <line x1="8" y1="2" x2="8" y2="6"/>
+              <line x1="3" y1="10" x2="21" y2="10"/>
+            </svg>
+          </div>
+          <h3>Active Rentals</h3>
+          <p id="admin-rentals-count" style="font-size: 1.8rem; font-weight: 700; color: var(--accent-primary); margin-top: 0.5rem;">0</p>
+        </div>
+
+        <div class="value-card">
+          <div class="value-icon">
+            <svg xmlns="http://www.w3.org/2000/svg" width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <rect x="3" y="3" width="7" height="7"></rect>
+              <rect x="14" y="3" width="7" height="7"></rect>
+              <rect x="14" y="14" width="7" height="7"></rect>
+              <rect x="3" y="14" width="7" height="7"></rect>
+            </svg>
+          </div>
+          <h3>Total Inventory</h3>
+          <p id="admin-inventory-count" style="font-size: 1.8rem; font-weight: 700; color: var(--accent-primary); margin-top: 0.5rem;">0</p>
+        </div>
+      </div>
+
+      <!-- Admin Navigation Tabs -->
+      <div class="catalog-controls">
+        <div class="filter-tabs" id="admin-tabs">
+          <button class="filter-tab active" data-admin-tab="inventory">Manage Inventory</button>
+          <button class="filter-tab" data-admin-tab="bookings">Active Bookings</button>
+          <button class="filter-tab" data-admin-tab="returns">Return Requests <span id="vendor-return-badge" style="background:#e74c3c;color:#fff;border-radius:10px;padding:2px 7px;font-size:0.75rem;margin-left:4px;display:none;">0</span></button>
+          <button class="filter-tab" data-admin-tab="categories">Category Management</button>
+          <button class="filter-tab" data-admin-tab="forecast">AI Demand Forecast</button>
+        </div>
+      </div>
+
+      <!-- TAB 1: MANAGE INVENTORY -->
+      <div class="admin-content-section active" id="admin-inventory-section">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem; flex-wrap: wrap; gap: 1rem;">
+          <h3 class="font-serif" style="font-size: 1.5rem; color: var(--accent-primary); margin: 0;">Fleet Inventory Management</h3>
+          <button id="open-vendor-modal-btn" class="btn-primary" style="padding: 0.85rem 1.5rem; border-radius: 14px; font-weight: 700; font-size: 0.9rem; background: var(--accent-primary); color: white; display: inline-flex; align-items: center; gap: 0.5rem; cursor: pointer; box-shadow: var(--shadow-sm); border: 1px solid var(--accent-gold);">
+            <span>📦 + Add New Appliance to Fleet Inventory</span>
+          </button>
+        </div>
+          <form id="add-appliance-form" class="form-grid">
+            <div class="form-group">
+              <label for="appliance-title">Appliance Name</label>
+              <input type="text" id="appliance-title" class="form-input" required placeholder="Smart Air Fryer Pro">
+            </div>
+            <div class="form-group">
+              <label for="appliance-category">Category</label>
+              <select id="appliance-category" class="form-input" style="height: 48px; -webkit-appearance: none; appearance: none; background-color: var(--bg-primary);" required>
+                <option value="kitchen">Kitchen</option>
+                <option value="laundry">Laundry</option>
+                <option value="climate">Climate Control</option>
+                <option value="living">Smart Living</option>
+              </select>
+            </div>
+            <div class="form-group">
+              <label for="appliance-price">Monthly Rent (₹)</label>
+              <input type="number" id="appliance-price" class="form-input" required placeholder="499" min="1">
+            </div>
+            <div class="form-group">
+              <label for="appliance-image">Appliance Image</label>
+              <select id="appliance-image" class="form-input" style="height: 48px; -webkit-appearance: none; appearance: none; background-color: var(--bg-primary);" required>
+                <option value="assets/images/smart_refrigerator.jpg">Smart Refrigerator</option>
+                <option value="assets/images/washing_machine.jpg">Washing Machine</option>
+                <option value="assets/images/microwave_oven.jpg">Convection Microwave</option>
+                <option value="assets/images/air_conditioner.jpg">Split Air Conditioner</option>
+                <option value="assets/images/dishwasher.jpg">Built-In Dishwasher</option>
+                <option value="assets/images/air_purifier.jpg">Minimalist Air Purifier</option>
+              </select>
+            </div>
+            <div class="form-group form-full">
+              <label for="appliance-desc">Description</label>
+              <textarea id="appliance-desc" class="gift-text-area" required placeholder="Provide a premium description of the appliance capacity, features, and energy efficiency..." style="height: 80px;"></textarea>
+            </div>
+            <div class="form-group form-full">
+              <label for="appliance-locality">Appliance Locality (Hyderabad Region) *</label>
+              <select id="appliance-locality" class="form-input" style="height: 48px; -webkit-appearance: none; appearance: none; background-color: var(--bg-primary);" required>
+                <option value="Gachibowli">Gachibowli (17.4401, 78.3489)</option>
+                <option value="Madhapur">Madhapur (17.4483, 78.3915)</option>
+                <option value="Kondapur">Kondapur (17.4699, 78.3578)</option>
+                <option value="Hitech City">Hitech City (17.4435, 78.3772)</option>
+                <option value="Kukatpally">Kukatpally (17.4948, 78.3996)</option>
+                <option value="Miyapur">Miyapur (17.4968, 78.3614)</option>
+                <option value="Jubilee Hills">Jubilee Hills (17.4319, 78.4073)</option>
+                <option value="Banjara Hills">Banjara Hills (17.4156, 78.4350)</option>
+                <option value="Ameerpet">Ameerpet (17.4375, 78.4482)</option>
+                <option value="Begumpet">Begumpet (17.4448, 78.4664)</option>
+                <option value="Secunderabad">Secunderabad (17.4399, 78.4983)</option>
+                <option value="Uppal">Uppal (17.4018, 78.5602)</option>
+                <option value="LB Nagar">LB Nagar (17.3457, 78.5522)</option>
+                <option value="Mehdipatnam">Mehdipatnam (17.3916, 78.4398)</option>
+                <option value="Manikonda">Manikonda (17.4042, 78.3788)</option>
+                <option value="Narsingi">Narsingi (17.3828, 78.3582)</option>
+                <option value="Attapur">Attapur (17.3688, 78.4299)</option>
+                <option value="Dilsukhnagar">Dilsukhnagar (17.3685, 78.5247)</option>
+                <option value="Tarnaka">Tarnaka (17.4285, 78.5303)</option>
+                <option value="Nacharam">Nacharam (17.4262, 78.5684)</option>
+              </select>
+            </div>
+            <div class="form-group form-full">
+              <label for="appliance-address">Vendor Address (Mandatory) *</label>
+              <input type="text" id="appliance-address" class="form-input" required placeholder="e.g. Gachibowli, Hyderabad, Telangana">
+            </div>
+            <div class="form-group">
+              <label for="appliance-phone">Vendor Phone Number (Mandatory, 10 Digits) *</label>
+              <input type="tel" id="appliance-phone" class="form-input" required placeholder="e.g. 9876543210" pattern="[0-9]{10}" title="Please enter a 10-digit phone number">
+            </div>
+            <div class="form-group">
+              <label for="appliance-badge">Product Badge (Optional)</label>
+              <input type="text" id="appliance-badge" class="form-input" placeholder="e.g. New, Eco-Friendly, Popular">
+            </div>
+            <div class="form-group" style="justify-content: flex-end; align-items: flex-end;">
+              <button type="submit" class="btn-primary" style="width: 100%; height: 48px; display: flex; justify-content: center; align-items: center; border-radius: 12px;">Add Appliance</button>
+            </div>
+          </form>
+        </div>
+
+        <h3 class="font-serif" style="font-size: 1.5rem; color: var(--accent-primary); margin-bottom: 1.5rem;">Current Inventory</h3>
+        <div class="products-grid" id="admin-inventory-grid">
+          <!-- Inventory items will render here dynamically -->
+        </div>
+      </div>
+
+      <!-- TAB 2: ACTIVE BOOKINGS (Customer Booked Info Only) -->
+      <div class="admin-content-section" id="admin-bookings-section">
+        <div class="glass-panel" style="padding: 2rem; border-radius: 20px; margin-bottom: 2rem;">
+          <h3 class="font-serif" style="font-size: 1.5rem; color: var(--accent-primary); margin-bottom: 0.5rem;">📋 Customer Active Rental Bookings</h3>
+          <p style="color: var(--text-secondary); font-size: 0.88rem; margin-bottom: 1.5rem;">Real-time list of all confirmed customer rental bookings, delivery addresses, tenure plans, and active status.</p>
+          <div class="bookings-list" id="admin-bookings-list">
+            <!-- Active customer booking cards render here dynamically -->
+          </div>
+        </div>
+      </div>
+
+      <!-- TAB 3: RETURN REQUESTS MANAGEMENT -->
+      <div class="admin-content-section" id="admin-returns-section">
+        <div class="glass-panel" style="padding: 2rem; border-radius: 20px; margin-bottom: 2rem;">
+          <div style="display: flex; justify-content: space-between; align-items: flex-start; flex-wrap: wrap; gap: 1rem; margin-bottom: 1.5rem;">
+            <div>
+              <div style="display: inline-flex; align-items: center; gap: 0.5rem; background: rgba(231, 76, 60, 0.12); border: 1px solid rgba(231, 76, 60, 0.4); padding: 0.35rem 0.85rem; border-radius: 20px; font-size: 0.78rem; font-weight: 700; color: #c0392b; margin-bottom: 0.5rem;">
+                <span>↩️ Early Return Request Desk</span>
+                <span style="opacity: 0.5;">|</span>
+                <span id="returns-pending-counter">0 Pending Review</span>
+              </div>
+              <h3 class="font-serif" style="font-size: 1.6rem; color: var(--accent-primary); margin: 0 0 0.35rem 0;">Appliance Return Requests</h3>
+              <p style="color: var(--text-secondary); font-size: 0.88rem; margin: 0;">Review customer requests to return appliances before their rental tenure ends. Accept with pickup schedules or reject with reason notes.</p>
+            </div>
+            <button id="refresh-returns-btn" class="btn-secondary" style="padding: 0.65rem 1.2rem; font-size: 0.85rem; border-radius: 12px; display: inline-flex; align-items: center; gap: 0.4rem; cursor: pointer;">
+              <span>🔄</span> Refresh Requests
+            </button>
+          </div>
+
+          <div id="vendor-returns-list" style="display: grid; gap: 1rem;">
+            <!-- Return requests populated here dynamically -->
+          </div>
+        </div>
+      </div>
+
+      <!-- TAB 4: DYNAMIC CATEGORY MANAGEMENT -->
+      <div class="admin-content-section" id="admin-categories-section">
+        <div class="glass-panel" style="padding: 2rem; border-radius: 20px; margin-bottom: 2rem;">
+          <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 1rem; margin-bottom: 1.5rem;">
+            <div>
+              <h3 class="font-serif" style="font-size: 1.6rem; color: var(--accent-primary); margin: 0 0 0.35rem 0;">Appliance Category Management</h3>
+              <p style="color: var(--text-secondary); font-size: 0.88rem; margin: 0;">Create, edit, activate/deactivate, and delete catalog categories dynamically in MongoDB.</p>
+            </div>
+            <button id="open-add-category-modal-btn" class="btn-primary" style="padding: 0.75rem 1.4rem; font-size: 0.88rem; font-weight: 700; border-radius: 12px; display: inline-flex; align-items: center; gap: 0.4rem; cursor: pointer;">
+              <span>➕ Add New Category</span>
+            </button>
+          </div>
+
+          <div id="vendor-categories-table-wrap" style="overflow-x: auto;">
+            <table style="width: 100%; border-collapse: collapse; font-size: 0.88rem; text-align: left;">
+              <thead>
+                <tr style="border-bottom: 2px solid var(--border-color); color: var(--text-secondary);">
+                  <th style="padding: 0.85rem 1rem;">Category</th>
+                  <th style="padding: 0.85rem 1rem;">Identifier (Slug)</th>
+                  <th style="padding: 0.85rem 1rem;">Description</th>
+                  <th style="padding: 0.85rem 1rem; text-align: center;">Appliances</th>
+                  <th style="padding: 0.85rem 1rem; text-align: center;">Status</th>
+                  <th style="padding: 0.85rem 1rem; text-align: right;">Actions</th>
+                </tr>
+              </thead>
+              <tbody id="vendor-categories-tbody">
+                <!-- Dynamically populated from /api/categories -->
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+
+      <!-- TAB 5: AI DEMAND FORECAST (LSTM Deep Learning Module) -->
+      <div class="admin-content-section" id="admin-forecast-section">
+        <div class="glass-panel" style="padding: 2rem; border-radius: 20px; margin-bottom: 2rem;">
+          <div style="display: flex; justify-content: space-between; align-items: flex-start; flex-wrap: wrap; gap: 1rem; margin-bottom: 1.5rem;">
+            <div>
+              <div style="display: inline-flex; align-items: center; gap: 0.5rem; background: rgba(212, 163, 115, 0.15); border: 1px solid var(--accent-gold); padding: 0.35rem 0.85rem; border-radius: 20px; font-size: 0.78rem; font-weight: 700; color: var(--accent-primary); margin-bottom: 0.5rem;">
+                <span>🧠 TensorFlow Keras LSTM Engine</span>
+                <span style="opacity: 0.5;">|</span>
+                <span>MongoDB Historical Pipeline</span>
+              </div>
+              <h3 class="font-serif" style="font-size: 1.6rem; color: var(--accent-primary); margin: 0 0 0.35rem 0;">Appliance Rental Demand Forecasting</h3>
+              <p style="color: var(--text-secondary); font-size: 0.9rem; margin: 0;">Predict future rental demand curves using a genuine LSTM recurrent neural network trained exclusively on your verified MongoDB booking records.</p>
+            </div>
+            <div style="display: flex; gap: 0.75rem; align-items: center;">
+              <button id="forecast-retrain-btn" class="btn-secondary" style="padding: 0.7rem 1.25rem; font-size: 0.85rem; border-radius: 12px; display: inline-flex; align-items: center; gap: 0.4rem; cursor: pointer;">
+                <span>🔄 Force Retrain Model</span>
+              </button>
+              <button id="forecast-run-btn" class="btn-primary" style="padding: 0.7rem 1.5rem; font-size: 0.85rem; border-radius: 12px; display: inline-flex; align-items: center; gap: 0.4rem; cursor: pointer; background: var(--accent-primary); color: white;">
+                <span>⚡ Run Forecast</span>
+              </button>
+            </div>
+          </div>
+
+          <!-- Controls Bar -->
+          <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 1rem; background: var(--bg-primary); padding: 1.25rem; border-radius: 14px; border: 1px solid var(--border-color); margin-bottom: 1.5rem;">
+            <div>
+              <label for="forecast-scope-select" style="display: block; font-size: 0.78rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px; color: var(--text-secondary); margin-bottom: 0.4rem;">Target Appliance / Scope</label>
+              <select id="forecast-scope-select" class="form-input" style="height: 44px; width: 100%; border-radius: 10px; background: var(--card-bg);">
+                <option value="all">Entire Fleet (All Appliances)</option>
+                <optgroup label="Categories" id="forecast-category-group">
+                  <option value="cat:kitchen">Kitchen Category</option>
+                  <option value="cat:laundry">Laundry Category</option>
+                  <option value="cat:climate">Climate Control Category</option>
+                  <option value="cat:living">Smart Living Category</option>
+                </optgroup>
+                <optgroup label="Individual Appliances" id="forecast-appliance-group">
+                </optgroup>
+              </select>
+            </div>
+            <div>
+              <label for="forecast-horizon-select" style="display: block; font-size: 0.78rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px; color: var(--text-secondary); margin-bottom: 0.4rem;">Forecasting Horizon</label>
+              <select id="forecast-horizon-select" class="form-input" style="height: 44px; width: 100%; border-radius: 10px; background: var(--card-bg);">
+                <option value="7">Next 7 Days (Short-term)</option>
+                <option value="14" selected>Next 14 Days (Standard)</option>
+                <option value="30">Next 30 Days (1 Month)</option>
+                <option value="90">Next 90 Days (~3 Months)</option>
+              </select>
+            </div>
+            <div>
+              <label for="forecast-interval-select" style="display: block; font-size: 0.78rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px; color: var(--text-secondary); margin-bottom: 0.4rem;">Aggregation Granularity</label>
+              <select id="forecast-interval-select" class="form-input" style="height: 44px; width: 100%; border-radius: 10px; background: var(--card-bg);">
+                <option value="daily" selected>Daily Aggregation</option>
+                <option value="weekly">Weekly Aggregation</option>
+                <option value="monthly">Monthly Aggregation</option>
+              </select>
+            </div>
+          </div>
+
+          <!-- Metrics Row -->
+          <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 1rem; margin-bottom: 1.5rem;">
+            <div class="glass-panel" style="padding: 1.25rem; border-radius: 14px; border: 1px solid var(--border-color);">
+              <div style="font-size: 0.75rem; text-transform: uppercase; letter-spacing: 0.5px; color: var(--text-secondary);">Forecast Data Basis</div>
+              <div id="metric-data-status" style="font-size: 1.05rem; font-weight: 700; color: var(--accent-primary); margin-top: 0.35rem;">--</div>
+              <div id="metric-historical-count" style="font-size: 0.73rem; color: var(--text-secondary); margin-top: 0.25rem;">0 historical records analyzed</div>
+            </div>
+            <div class="glass-panel" style="padding: 1.25rem; border-radius: 14px; border: 1px solid var(--border-color);">
+              <div style="font-size: 0.75rem; text-transform: uppercase; letter-spacing: 0.5px; color: var(--text-secondary);">Model Architecture</div>
+              <div id="metric-model-arch" style="font-size: 1.05rem; font-weight: 700; color: var(--accent-primary); margin-top: 0.35rem;">LSTM (2-layer + Dense)</div>
+              <div id="metric-epochs-status" style="font-size: 0.73rem; color: var(--text-secondary); margin-top: 0.25rem;">Adam optimizer • MSE loss</div>
+            </div>
+            <div class="glass-panel" style="padding: 1.25rem; border-radius: 14px; border: 1px solid var(--border-color);">
+              <div style="font-size: 0.75rem; text-transform: uppercase; letter-spacing: 0.5px; color: var(--text-secondary);">Model MAE (Mean Abs Error)</div>
+              <div id="metric-mae-val" style="font-size: 1.05rem; font-weight: 700; color: var(--accent-primary); margin-top: 0.35rem;">--</div>
+              <div style="font-size: 0.75rem; color: var(--text-secondary); margin-top: 0.25rem;">Average error magnitude</div>
+            </div>
+            <div class="glass-panel" style="padding: 1.25rem; border-radius: 14px; border: 1px solid var(--border-color);">
+              <div style="font-size: 0.75rem; text-transform: uppercase; letter-spacing: 0.5px; color: var(--text-secondary);">Model RMSE</div>
+              <div id="metric-rmse-val" style="font-size: 1.05rem; font-weight: 700; color: var(--accent-primary); margin-top: 0.35rem;">--</div>
+              <div style="font-size: 0.75rem; color: var(--text-secondary); margin-top: 0.25rem;">Root mean squared error</div>
+            </div>
+            <div class="glass-panel" style="padding: 1.25rem; border-radius: 14px; border: 1px solid var(--border-color);">
+              <div style="font-size: 0.75rem; text-transform: uppercase; letter-spacing: 0.5px; color: var(--text-secondary);">Seasonality Detection</div>
+              <div id="metric-seasonality-badge" style="font-size: 1.05rem; font-weight: 700; color: var(--accent-primary); margin-top: 0.35rem;">--</div>
+              <div id="metric-seasonality-desc" style="font-size: 0.73rem; color: var(--text-secondary); margin-top: 0.25rem;">Derived strictly from records</div>
+            </div>
+          </div>
+
+          <!-- Chart Area -->
+          <div class="glass-panel" style="padding: 1.5rem; border-radius: 16px; margin-bottom: 2rem; border: 1px solid var(--border-color); background: var(--bg-primary);">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem; flex-wrap: wrap; gap: 0.75rem;">
+              <h4 class="font-serif" style="margin: 0; font-size: 1.15rem; color: var(--accent-primary);">Time-Series Demand Curve: Historical vs LSTM Prediction</h4>
+              <div style="display: flex; gap: 1rem; font-size: 0.8rem; align-items: center; flex-wrap: wrap;">
+                <span style="display: inline-flex; align-items: center; gap: 0.4rem;">
+                  <span style="display: inline-block; width: 14px; height: 3px; background: #2563eb; border-radius: 2px;"></span>
+                  <span>Historical Demand (MongoDB)</span>
+                </span>
+                <span style="display: inline-flex; align-items: center; gap: 0.4rem;">
+                  <span style="display: inline-block; width: 14px; height: 3px; background: #f59e0b; border-bottom: 2px dashed #f59e0b;"></span>
+                  <span>LSTM Forecast</span>
+                </span>
+                <span style="display: inline-flex; align-items: center; gap: 0.4rem;">
+                  <span style="display: inline-block; width: 2px; height: 12px; background: #dc2626;"></span>
+                  <span>Forecast Boundary</span>
+                </span>
+              </div>
+            </div>
+            
+            <div id="forecast-chart-container" style="width: 100%; min-height: 320px; position: relative;">
+              <!-- Dynamic SVG Chart renders here -->
+            </div>
+          </div>
+
+          <!-- Future Predictions Breakdown Table -->
+          <div class="glass-panel" style="padding: 1.5rem; border-radius: 16px; border: 1px solid var(--border-color);">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem; flex-wrap: wrap; gap: 0.5rem;">
+              <h4 class="font-serif" style="margin: 0; font-size: 1.15rem; color: var(--accent-primary);">Projected Rental Demand Schedule</h4>
+              <span id="forecast-total-pill" style="font-size: 0.8rem; font-weight: 700; background: rgba(37, 99, 235, 0.1); color: #2563eb; padding: 0.3rem 0.8rem; border-radius: 12px;">Total Projected Demand: -- units</span>
+            </div>
+            <div style="overflow-x: auto;">
+              <table style="width: 100%; border-collapse: collapse; font-size: 0.85rem; text-align: left;">
+                <thead>
+                  <tr style="border-bottom: 1px solid var(--border-color); color: var(--text-secondary);">
+                    <th style="padding: 0.75rem 1rem;">Forecast Date</th>
+                    <th style="padding: 0.75rem 1rem;">Horizon Step</th>
+                    <th style="padding: 0.75rem 1rem;">Predicted Demand Units</th>
+                    <th style="padding: 0.75rem 1rem;">Demand Intensity</th>
+                    <th style="padding: 0.75rem 1rem;">Inventory Readiness</th>
+                  </tr>
+                </thead>
+                <tbody id="forecast-predictions-tbody">
+                  <tr>
+                    <td colspan="5" style="padding: 1.5rem; text-align: center; color: var(--text-secondary);">Select parameters and click "Run Forecast" to calculate demand projection.</td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- --- CART DRAWER --- -->
+  <div class="cart-overlay" id="cart-overlay">
+    <div class="cart-drawer">
+      <div class="cart-header">
+        <h2>Rental Bag</h2>
+        <button id="cart-close" class="close-btn" aria-label="Close Shopping Bag">&times;</button>
+      </div>
+
+      <div class="cart-body">
+        <!-- Empty Cart Message -->
+        <div id="cart-empty" class="cart-empty">
+          <svg xmlns="http://www.w3.org/2000/svg" width="64" height="64" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+            <circle cx="9" cy="21" r="1"></circle>
+            <circle cx="20" cy="21" r="1"></circle>
+            <path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6"></path>
+          </svg>
+          <p>Your rental bag is currently empty.</p>
+        </div>
+
+        <!-- Cart Items Container -->
+        <div id="cart-items-list" class="cart-items-list">
+          <!-- Dynamically filled with JS -->
+        </div>
+      </div>
+
+      <div class="cart-footer">
+        <!-- Promo Code Input -->
+        <div class="promo-section">
+          <input type="text" id="promo-code" class="promo-input" placeholder="Promo Code (HOMELUXE)">
+          <button id="promo-apply" class="promo-btn">Apply</button>
+        </div>
+
+        <div class="cart-summary">
+          <div class="summary-row">
+            <span>Monthly Rent Subtotal</span>
+            <span id="cart-subtotal">₹0.00</span>
+          </div>
+          <div class="summary-row discount" id="discount-row" style="display: none;">
+            <span>Discount (15%)</span>
+            <span id="cart-discount">-₹0.00</span>
+          </div>
+          <div class="summary-row">
+            <span>Installation & Delivery</span>
+            <span id="cart-delivery">₹0.00</span>
+          </div>
+          <div class="summary-row total">
+            <span>Total Monthly Rent</span>
+            <span id="cart-total">₹0.00</span>
+          </div>
+        </div>
+
+        <button id="checkout-trigger" class="btn-primary checkout-btn">Proceed to Rental Setup</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- --- PRODUCT DETAIL MODAL --- -->
+  <div class="modal-overlay" id="product-modal">
+    <div class="modal-container">
+      <button id="modal-close" class="close-btn modal-close" aria-label="Close Product Details">&times;</button>
+      <div class="modal-grid">
+        <!-- Gallery -->
+        <div class="modal-gallery">
+          <img src="" alt="" id="modal-img">
+        </div>
+        <!-- Info & Configurator -->
+        <div class="modal-info">
+          <span id="modal-category" class="modal-category">Kitchen</span>
+          <h2 id="modal-title" class="modal-title">Smart Refrigerator</h2>
+          <div class="modal-price-box">
+            <span id="modal-price" class="modal-current-price">₹0.00</span>
+            <span id="modal-buy-price" class="price-comparison-tag">Buy @ ₹45,000</span>
+          </div>
+          <p id="modal-desc" class="modal-desc">Detailed descriptions of the appliance specs.</p>
+
+          <!-- Delivery Estimate Checker -->
+          <div style="margin: 0.8rem 0; padding: 0.8rem; background: var(--bg-tertiary); border-radius: 12px; border: 1px solid var(--border-color); display: flex; align-items: center; justify-content: space-between; font-size: 0.82rem;">
+            <span>🚚 Delivery Pincode Availability:</span>
+            <span id="modal-pincode-status" style="color: #27ae60; font-weight: 700;">✅ Free Delivery Available Tomorrow</span>
+          </div>
+
+          <!-- Vendor Contact Info Card -->
+          <div class="vendor-info-card" id="modal-vendor-card" style="margin: 1.2rem 0; padding: 1.1rem 1.3rem; background: var(--bg-tertiary); border: 1.5px solid var(--border-color); border-radius: 18px; box-shadow: var(--shadow-sm);">
+            <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 0.75rem;">
+              <span style="font-size: 0.75rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.08em; color: var(--accent-primary);">🏪 Certified Vendor Provider</span>
+              <span id="modal-vendor-badge" style="font-size: 0.72rem; color: #27ae60; font-weight: 700; background: rgba(39, 174, 96, 0.12); padding: 0.2rem 0.6rem; border-radius: 12px;">✔ Verified Provider</span>
+            </div>
+            <div style="display: flex; flex-direction: column; gap: 0.7rem; font-size: 0.85rem;">
+              <div style="display: flex; align-items: flex-start; gap: 0.65rem;">
+                <span style="font-size: 1.15rem; line-height: 1;">📍</span>
+                <div>
+                  <span style="font-size: 0.72rem; color: var(--text-secondary); display: block; font-weight: 600; text-transform: uppercase; letter-spacing: 0.04em;">Provider Locality &amp; Rental Address</span>
+                  <strong id="modal-vendor-address" style="color: var(--text-primary); font-size: 0.88rem;">Gachibowli, Hyderabad, Telangana</strong>
+                  <div id="modal-vendor-distance-row" style="margin-top: 0.35rem; display: flex; align-items: center; gap: 0.4rem; font-size: 0.8rem; background: rgba(30, 63, 32, 0.07); padding: 0.25rem 0.6rem; border-radius: 8px; border: 1px solid var(--border-color); width: fit-content;">
+                    <span>📏 Distance:</span>
+                    <strong id="modal-vendor-distance" style="color: var(--accent-primary);">4.6 km away</strong>
+                  </div>
+                </div>
+              </div>
+              <div style="display: flex; align-items: center; gap: 0.65rem;">
+                <span style="font-size: 1.15rem; line-height: 1;">📞</span>
+                <div>
+                  <span style="font-size: 0.72rem; color: var(--text-secondary); display: block; font-weight: 600; text-transform: uppercase; letter-spacing: 0.04em;">Direct Vendor Contact</span>
+                  <a id="modal-vendor-phone-link" href="tel:9876543210" style="color: var(--accent-gold); font-weight: 700; font-size: 0.9rem; text-decoration: none; display: inline-flex; align-items: center; gap: 0.35rem;">
+                    <span id="modal-vendor-phone">+91 98765 43210</span>
+                    <span style="font-size: 0.72rem; color: var(--accent-primary); font-weight: 600;">(Tap to Call)</span>
+                  </a>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Specifications Table -->
+          <div class="options-group">
+            <div class="options-title">Technical Specifications</div>
+            <table class="spec-table">
+              <tbody>
+                <tr><td class="spec-label">Energy Efficiency</td><td class="spec-val" id="spec-energy">5-Star Inverter Rating</td></tr>
+                <tr><td class="spec-label">Capacity / Size</td><td class="spec-val" id="spec-capacity">350 Liters</td></tr>
+                <tr><td class="spec-label">Maintenance Cost</td><td class="spec-val" style="color: #27ae60;">₹0 (100% Free Lifetime Service)</td></tr>
+                <tr><td class="spec-label">Warranty Guarantee</td><td class="spec-val">Comprehensive Replacement</td></tr>
+              </tbody>
+            </table>
+          </div>
+
+          <!-- Month-Wise Incremental Tenure Selector -->
+          <div class="options-group">
+            <div class="options-title">
+              <span>Select Rental Duration</span>
+              <span id="size-label-detail" style="color: var(--accent-gold); font-weight: 700;">1 Month Duration</span>
+            </div>
+            
+            <!-- Continuous Stepper: [-] 1 Month [+] -->
+            <div class="tenure-stepper-box" style="display: flex; align-items: center; justify-content: space-between; background: var(--bg-tertiary); border: 1.5px solid var(--border-color); border-radius: 16px; padding: 0.85rem 1.2rem; margin-top: 0.5rem;">
+              <div style="display: flex; flex-direction: column;">
+                <span style="font-size: 0.72rem; text-transform: uppercase; letter-spacing: 0.08em; color: var(--text-secondary); font-weight: 700;">Rental Tenure</span>
+                <strong id="tenure-display-text" style="font-size: 1.2rem; color: var(--accent-primary);">1 Month</strong>
+              </div>
+              <div style="display: flex; align-items: center; gap: 0.6rem;">
+                <button type="button" class="tenure-btn" id="tenure-minus-btn" aria-label="Decrease months" style="width: 38px; height: 38px; border-radius: 50%; border: 1.5px solid var(--border-color); background: var(--bg-secondary); color: var(--text-primary); font-size: 1.3rem; font-weight: 700; cursor: pointer; display: flex; align-items: center; justify-content: center; transition: all 0.2s;">−</button>
+                <input type="number" id="tenure-months-input" min="1" max="36" value="1" style="width: 55px; height: 38px; text-align: center; font-size: 1.1rem; font-weight: 700; border-radius: 10px; border: 1.5px solid var(--border-color); background: var(--bg-primary); color: var(--accent-primary);">
+                <button type="button" class="tenure-btn" id="tenure-plus-btn" aria-label="Increase months" style="width: 38px; height: 38px; border-radius: 50%; border: 1.5px solid var(--border-color); background: var(--bg-secondary); color: var(--text-primary); font-size: 1.3rem; font-weight: 700; cursor: pointer; display: flex; align-items: center; justify-content: center; transition: all 0.2s;">+</button>
+              </div>
+            </div>
+
+            <!-- Quick Selection Month Pills -->
+            <div class="tenure-quick-pills" id="tenure-quick-pills" style="display: flex; gap: 0.45rem; margin-top: 0.75rem; flex-wrap: wrap;">
+              <button type="button" class="tenure-pill active" data-months="1">1 mo</button>
+              <button type="button" class="tenure-pill" data-months="2">2 mo</button>
+              <button type="button" class="tenure-pill" data-months="3">3 mo</button>
+              <button type="button" class="tenure-pill" data-months="4">4 mo</button>
+              <button type="button" class="tenure-pill" data-months="5">5 mo</button>
+              <button type="button" class="tenure-pill" data-months="6">6 mo</button>
+              <button type="button" class="tenure-pill" data-months="9">9 mo</button>
+              <button type="button" class="tenure-pill" data-months="12">12 mo</button>
+            </div>
+
+            <!-- Live Rental Dates Preview -->
+            <div style="display: flex; justify-content: space-between; font-size: 0.8rem; color: var(--text-secondary); margin-top: 0.75rem; padding: 0.5rem 0.8rem; background: var(--bg-secondary); border: 1px solid var(--border-color); border-radius: 10px;">
+              <span>📅 Start: <strong id="tenure-start-preview" style="color: var(--text-primary);">-</strong></span>
+              <span>🏁 End: <strong id="tenure-end-preview" style="color: var(--accent-primary);">-</strong></span>
+            </div>
+          </div>
+
+          <!-- Message Card customization (Instructions) -->
+          <div class="options-group">
+            <div class="options-title">Installation Instructions (Optional)</div>
+            <div class="gift-inputs">
+              <textarea id="gift-message" class="gift-text-area" placeholder="E.g., Preferred delivery time, floor number, lift availability..."></textarea>
+              <div class="options-title">Select Premium Coverages</div>
+              <div class="addons-list">
+                <input type="checkbox" id="addon-vase" class="addon-checkbox" value="150">
+                <label for="addon-vase" class="addon-label">
+                  + LuxeCare Protection (₹150/mo)
+                </label>
+
+                <input type="checkbox" id="addon-chocolates" class="addon-checkbox" value="100">
+                <label for="addon-chocolates" class="addon-label">
+                  + Voltage Stabilizer (₹100/mo)
+                </label>
+
+                <input type="checkbox" id="addon-teddy" class="addon-checkbox" value="250">
+                <label for="addon-teddy" class="addon-label">
+                  + Smart Home Integration (₹250/mo)
+                </label>
+              </div>
+            </div>
+          </div>
+
+          <!-- Add Action -->
+          <div class="modal-actions">
+            <div class="modal-qty-selector">
+              <button class="qty-btn" id="modal-qty-minus">-</button>
+              <span class="qty-val" id="modal-qty-value">1</span>
+              <button class="qty-btn" id="modal-qty-plus">+</button>
+            </div>
+            <button id="modal-add-to-cart" class="btn-primary modal-add-btn">Rent Now</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Customer Reviews & Ratings Section -->
+      <div class="modal-reviews-section" style="padding: 2.2rem 3rem 2.8rem; border-top: 1.5px solid var(--border-color); background: var(--bg-primary);">
+        <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 1.2rem; margin-bottom: 1.8rem;">
+          <div>
+            <h3 style="font-size: 1.55rem; color: var(--accent-primary); margin: 0 0 0.4rem 0;">Customer Reviews &amp; Ratings</h3>
+            <div style="display: flex; align-items: center; gap: 0.8rem; flex-wrap: wrap;">
+              <div id="modal-stars-container" style="color: var(--accent-gold); font-size: 1.3rem; letter-spacing: 2px;">⭐⭐⭐⭐⭐</div>
+              <span id="modal-avg-rating-text" style="font-size: 1.25rem; font-weight: 700; color: var(--text-primary);">4.8 / 5.0</span>
+              <span id="modal-total-reviews-badge" style="background: var(--bg-tertiary); padding: 0.3rem 0.85rem; border-radius: 20px; font-size: 0.82rem; font-weight: 600; color: var(--text-secondary); border: 1px solid var(--border-color);">Based on 5 verified reviews</span>
+            </div>
+          </div>
+          <button id="toggle-review-form-btn" class="btn-primary" style="padding: 0.7rem 1.4rem; font-size: 0.88rem; font-weight: 700; border-radius: 12px; display: inline-flex; align-items: center; gap: 0.5rem; cursor: pointer; background: var(--accent-primary); color: white; border: 1px solid var(--accent-gold);">
+            <span>✍️ Write a Review</span>
+          </button>
+        </div>
+
+        <!-- Write a Review Form (Customer verified) -->
+        <div id="modal-write-review-container" style="display: none; background: var(--bg-secondary); border: 1.5px solid var(--border-color); border-radius: 20px; padding: 1.8rem; margin-bottom: 2rem; box-shadow: var(--shadow-sm);">
+          <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem;">
+            <h4 style="font-size: 1.2rem; color: var(--accent-primary); margin: 0;">Share Your Appliance Rental Experience</h4>
+            <button type="button" id="close-review-form-btn" style="background: none; border: none; font-size: 1.5rem; color: var(--text-secondary); cursor: pointer; line-height: 1;">&times;</button>
+          </div>
+          
+          <div id="review-eligibility-alert" style="display: none; padding: 0.9rem 1.2rem; border-radius: 12px; margin-bottom: 1.2rem; font-size: 0.88rem; line-height: 1.4;"></div>
+
+          <form id="submit-review-form">
+            <!-- Interactive 1-5 Star Picker -->
+            <div style="margin-bottom: 1.2rem;">
+              <label style="display: block; font-size: 0.8rem; font-weight: 700; letter-spacing: 0.06em; text-transform: uppercase; color: var(--text-secondary); margin-bottom: 0.5rem;">Your Rating (1 to 5 Stars) *</label>
+              <div class="star-rating-picker" id="star-picker" style="display: inline-flex; align-items: center; gap: 8px;">
+                <span class="star-btn" data-val="1" style="font-size: 2rem; cursor: pointer; color: var(--accent-gold); transition: transform 0.2s;">★</span>
+                <span class="star-btn" data-val="2" style="font-size: 2rem; cursor: pointer; color: var(--accent-gold); transition: transform 0.2s;">★</span>
+                <span class="star-btn" data-val="3" style="font-size: 2rem; cursor: pointer; color: var(--accent-gold); transition: transform 0.2s;">★</span>
+                <span class="star-btn" data-val="4" style="font-size: 2rem; cursor: pointer; color: var(--accent-gold); transition: transform 0.2s;">★</span>
+                <span class="star-btn active" data-val="5" style="font-size: 2rem; cursor: pointer; color: var(--accent-gold); transition: transform 0.2s;">★</span>
+                <span id="star-picker-label" style="margin-left: 0.9rem; font-size: 0.9rem; font-weight: 700; color: var(--accent-gold);">5 Stars — Excellent</span>
+              </div>
+              <input type="hidden" id="selected-rating-val" value="5">
+            </div>
+
+            <!-- Review Comment Box -->
+            <div style="margin-bottom: 1.4rem;">
+              <label for="review-comment-input" style="display: block; font-size: 0.8rem; font-weight: 700; letter-spacing: 0.06em; text-transform: uppercase; color: var(--text-secondary); margin-bottom: 0.5rem;">Detailed Feedback &amp; Review *</label>
+              <textarea id="review-comment-input" class="form-input" required placeholder="How was cooling / heating efficiency, sound levels, power consumption, and delivery installation?" style="width: 100%; height: 95px; padding: 0.85rem 1.1rem; border-radius: 12px; border: 1.5px solid var(--border-color); background: var(--bg-primary); color: var(--text-primary); font-size: 0.9rem; resize: vertical;"></textarea>
+            </div>
+
+            <div style="display: flex; justify-content: flex-end; align-items: center; gap: 0.8rem;">
+              <button type="button" id="cancel-review-btn" style="padding: 0.7rem 1.3rem; background: var(--bg-tertiary); border: 1px solid var(--border-color); border-radius: 12px; color: var(--text-primary); font-weight: 600; cursor: pointer;">Cancel</button>
+              <button type="submit" id="submit-review-btn" class="btn-primary" style="padding: 0.7rem 1.6rem; border-radius: 12px; font-weight: 700; cursor: pointer; display: inline-flex; align-items: center; gap: 0.5rem; background: var(--accent-primary); color: white;">
+                <span>Post Verified Review</span>
+              </button>
+            </div>
+          </form>
+        </div>
+
+        <!-- Reviews List Container -->
+        <div id="modal-reviews-list" style="display: flex; flex-direction: column; gap: 1.1rem;">
+          <!-- Review Cards Rendered Dynamically -->
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- --- CHECKOUT WIZARD MODAL --- -->
+  <div class="checkout-overlay" id="checkout-modal">
+    <div class="checkout-container">
+      <!-- Progress Bar -->
+      <div class="checkout-progress">
+        <div class="progress-step active" id="step-indicator-1">Installation</div>
+        <div class="progress-step" id="step-indicator-2">Verification</div>
+        <div class="progress-step" id="step-indicator-3">Done</div>
+      </div>
+
+      <div class="checkout-body">
+        <!-- Close Button -->
+        <button id="checkout-close" class="close-btn" style="position: absolute; top: 15px; right: 15px; z-index: 10;" aria-label="Close Checkout">&times;</button>
+
+        <!-- STEP 1: SHIPPING FORM & KYC VERIFICATION -->
+        <div class="checkout-step-content active" id="checkout-step-1">
+          <h2 class="font-serif" style="font-size: 1.8rem; color: var(--accent-primary);">Installation Address &amp; Identity Verification</h2>
+          <form id="shipping-form" class="form-grid">
+            <div class="form-group form-full">
+              <label for="shipping-name">Full Name</label>
+              <input type="text" id="shipping-name" class="form-input" required placeholder="Aarav Sharma">
+            </div>
+            <div class="form-group form-full">
+              <label for="shipping-email">Email Address</label>
+              <input type="email" id="shipping-email" class="form-input" required placeholder="aarav.sharma@example.com">
+            </div>
+            <div class="form-group form-full">
+              <label for="shipping-address">Delivery &amp; Installation Address</label>
+              <input type="text" id="shipping-address" class="form-input" required placeholder="402, Green Glen Heights, HSR Layout">
+            </div>
+            <div class="form-group">
+              <label for="shipping-city">City</label>
+              <input type="text" id="shipping-city" class="form-input" required placeholder="Bengaluru">
+            </div>
+            <div class="form-group">
+              <label for="shipping-zip">Pincode</label>
+              <input type="text" id="shipping-zip" class="form-input" required placeholder="560102">
+            </div>
+
+            <!-- KYC Document Verification for Amazon Rental Safety -->
+            <div class="form-group" style="grid-column: span 2;">
+              <label for="kyc-doc-type" style="color: var(--accent-gold); font-weight: 700;">🔐 KYC Identity Proof (Required for Rental Agreement)</label>
+              <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 0.8rem;">
+                <select id="kyc-doc-type" class="form-input" style="height: 48px; background: var(--bg-tertiary);">
+                  <option value="aadhaar">Aadhaar Card</option>
+                  <option value="dl">Driving License</option>
+                  <option value="passport">Passport</option>
+                </select>
+                <input type="text" id="kyc-doc-num" class="form-input" placeholder="e.g. 5482 9102 3847" required>
+              </div>
+            </div>
+          </form>
+        </div>
+
+        <!-- STEP 2: PAYMENT METHOD & DEPOSIT CONFIRMATION -->
+        <div class="checkout-step-content" id="checkout-step-2">
+          <h2 class="font-serif" style="font-size: 1.5rem; color: var(--accent-primary); margin-bottom: 1rem;">Select Payment Method</h2>
+          
+          <div class="payment-methods-grid">
+            <label class="payment-method-card active" id="pay-card-lbl">
+              <input type="radio" name="pay-method" value="card" checked onclick="switchPayMethod('card')">
+              💳 <span>Credit/Debit Card</span>
+            </label>
+            <label class="payment-method-card" id="pay-upi-lbl">
+              <input type="radio" name="pay-method" value="upi" onclick="switchPayMethod('upi')">
+              📱 <span>UPI Instant</span>
+            </label>
+            <label class="payment-method-card" id="pay-cod-lbl">
+              <input type="radio" name="pay-method" value="cod" onclick="switchPayMethod('cod')">
+              💵 <span>Pay on Delivery</span>
+            </label>
+          </div>
+
+          <div id="card-payment-view">
+            <div class="payment-card-scene">
+              <div class="credit-card" id="interactive-card">
+                <!-- Front Face -->
+                <div class="card-face front">
+                  <div class="card-logo">HomeRent AI</div>
+                  <div class="card-chip"></div>
+                  <div class="card-number-display" id="card-num-disp">•••• •••• •••• ••••</div>
+                  <div class="card-info-row">
+                    <div>
+                      <div class="card-label">Card Holder</div>
+                      <div class="card-val" id="card-name-disp">FULL NAME</div>
+                    </div>
+                    <div>
+                      <div class="card-label">Expires</div>
+                      <div class="card-val" id="card-exp-disp">MM/YY</div>
+                    </div>
+                  </div>
+                </div>
+                <!-- Back Face -->
+                <div class="card-face back">
+                  <div class="card-stripe"></div>
+                  <div class="card-signature-area">
+                    <div class="card-label" style="margin-left: 20px;">Signature</div>
+                    <div class="signature-strip"></div>
+                    <div class="cvv-display-box" id="card-cvv-disp">•••</div>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <form id="payment-form" class="form-grid">
+              <div class="form-group form-full">
+                <label for="card-number">Card Number</label>
+                <input type="text" id="card-number" class="form-input" placeholder="1234 5678 1234 5678" maxlength="19">
+              </div>
+              <div class="form-group form-full">
+                <label for="card-name">Cardholder Name</label>
+                <input type="text" id="card-name" class="form-input" placeholder="Aarav Sharma">
+              </div>
+              <div class="form-group">
+                <label for="card-expiry">Expiration Date</label>
+                <input type="text" id="card-expiry" class="form-input" placeholder="MM/YY" maxlength="5">
+              </div>
+              <div class="form-group">
+                <label for="card-cvv">CVV</label>
+                <input type="text" id="card-cvv" class="form-input" placeholder="123" maxlength="3">
+              </div>
+            </form>
+          </div>
+
+          <div id="upi-payment-view" style="display: none; padding: 1.5rem; background: var(--bg-tertiary); border-radius: 16px; border: 1px solid var(--border-color); text-align: center;">
+            <p style="font-size: 0.9rem; font-weight: 600; color: var(--accent-primary); margin-bottom: 0.8rem;">Enter VPA / UPI ID (GPay, PhonePe, Paytm)</p>
+            <input type="text" id="upi-id-input" class="form-input" placeholder="aarav@upi" style="max-width: 320px; margin: 0 auto; text-align: center;">
+            <p style="font-size: 0.78rem; color: var(--text-secondary); margin-top: 0.6rem;">An instant payment request will be sent to your UPI app upon confirmation.</p>
+          </div>
+
+          <div id="cod-payment-view" style="display: none; padding: 1.5rem; background: var(--bg-tertiary); border-radius: 16px; border: 1px solid var(--border-color); text-align: center;">
+            <p style="font-size: 0.9rem; font-weight: 600; color: var(--accent-primary);">Zero Upfront Payment Required</p>
+            <p style="font-size: 0.82rem; color: var(--text-secondary); margin-top: 0.4rem;">Pay the monthly rent and security deposit to the delivery agent via Cash or POS Terminal upon setup.</p>
+          </div>
+        </div>
+
+        <!-- STEP 3: ORDER SUCCESS -->
+        <div class="checkout-step-content" id="checkout-step-3">
+          <div class="success-checkmark">✓</div>
+          <h2 class="success-title">Rental Request Placed!</h2>
+          <p class="success-text">Thank you! Your appliance rental request is confirmed. Our AI technician will contact you shortly for installation schedule. A confirmation copy is sent to <span id="confirmed-email" style="font-weight: 600;">your email</span>.</p>
+          <div style="background: var(--bg-tertiary); padding: 1.2rem; border-radius: 16px; margin-bottom: 2rem; text-align: center;">
+            <div style="font-size: 0.8rem; color: var(--text-secondary); text-transform: uppercase; letter-spacing: 0.05em;">Booking Reference ID</div>
+            <div id="order-tracking-id" style="font-size: 1.1rem; font-weight: 700; color: var(--accent-primary); margin-top: 0.2rem;">HR-928476</div>
+          </div>
+          <div style="display: flex; gap: 1rem; justify-content: center; flex-wrap: wrap; margin-bottom: 1.8rem;">
+            <button type="button" id="btn-view-receipt" class="btn-primary" style="display: inline-flex; align-items: center; gap: 0.5rem; padding: 0.8rem 1.5rem; border-radius: 14px; font-weight: 700; font-size: 0.95rem; cursor: pointer;">
+              <span>📄</span> View Receipt
+            </button>
+            <button type="button" id="btn-download-receipt" class="btn-secondary" style="display: inline-flex; align-items: center; gap: 0.5rem; padding: 0.8rem 1.5rem; border-radius: 14px; font-weight: 700; font-size: 0.95rem; cursor: pointer;">
+              <span>📥</span> Download Receipt
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <div class="checkout-footer" id="checkout-footer">
+        <button id="checkout-back" class="btn-secondary" style="visibility: hidden;">Back</button>
+        <button id="checkout-next" class="btn-primary">Next</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- --- AI RECOMMENDATION CHAT FLOATING PANEL --- -->
+  <div class="ai-chat-widget" id="ai-chat-widget">
+    <button class="ai-chat-btn" id="ai-chat-btn" aria-label="Open AI Assistant">
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/>
+      </svg>
+      <span class="ai-badge">AI</span>
+    </button>
+    <div class="ai-chat-panel glass-panel" id="ai-chat-panel">
+      <div class="ai-chat-header">
+        <h3>HomeRent AI Assistant</h3>
+        <button id="ai-chat-close" class="close-btn">&times;</button>
+      </div>
+      <div class="ai-chat-body" id="ai-chat-body">
+        <div class="ai-msg bot">
+          <p>Hello! I am your AI Recommendation Engine. Tell me about your household and I will suggest the perfect appliances for you!</p>
+        </div>
+        <div class="ai-msg bot">
+          <p>Choose an option below to start:</p>
+          <div class="ai-options">
+            <button class="ai-opt-btn" data-intent="family">Recommend by Family Size</button>
+            <button class="ai-opt-btn" data-intent="eco">Find Energy Saving (Eco-friendly) Models</button>
+            <button class="ai-opt-btn" data-intent="budget">Under ₹1000/month Rentals</button>
+          </div>
+        </div>
+      </div>
+      <div class="ai-chat-footer">
+        <input type="text" id="ai-chat-input" placeholder="Type your query... (e.g., fridge for 4 people)" class="form-input">
+        <button id="ai-chat-send" class="btn-primary" style="padding: 0.8rem 1.2rem; border-radius: 12px;">Send</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- --- VENDOR ADD APPLIANCE MODAL --- -->
+  <div class="checkout-overlay" id="vendor-add-appliance-modal">
+    <div class="checkout-container vendor-modal-container" style="max-width: 620px; width: 92%; position: relative; padding: 2.2rem; border-radius: 24px; background: var(--bg-secondary); box-shadow: var(--shadow-lg); border: 1px solid var(--border-color); animation: modalFadeIn 0.3s cubic-bezier(0.16, 1, 0.3, 1);">
+      <button id="vendor-modal-close" class="close-btn" style="position: absolute; top: 18px; right: 20px; z-index: 10; font-size: 1.6rem; cursor: pointer; border: none; background: transparent; color: var(--text-secondary); width: 32px; height: 32px; display: flex; align-items: center; justify-content: center; border-radius: 50%;" aria-label="Close Modal">&times;</button>
+      
+      <div style="display: flex; align-items: center; gap: 0.6rem; margin-bottom: 1.5rem;">
+        <span style="font-size: 1.6rem;">📦</span>
+        <h2 style="font-family: 'Playfair Display', serif; font-size: 1.45rem; color: var(--accent-primary); font-weight: 700; margin: 0;">Add New Appliance to Fleet Inventory</h2>
+      </div>
+
+      <form id="vendor-modal-form" style="display: flex; flex-direction: column; gap: 1rem;">
+        <!-- Row 0: Select Predefined Appliance Quick-Fill -->
+        <div class="form-group" style="display: flex; flex-direction: column; gap: 0.35rem;">
+          <label for="vmodal-predefined-select" style="font-size: 0.72rem; font-weight: 700; letter-spacing: 0.08em; text-transform: uppercase; color: var(--accent-gold);">⚡ SELECT PREDEFINED APPLIANCE (AUTO-MAPS IMAGE & DETAILS)</label>
+          <select id="vmodal-predefined-select" class="form-input" style="width: 100%; padding: 0.8rem 1rem; border-radius: 12px; border: 1.5px solid var(--accent-gold); background: var(--bg-primary); color: var(--text-primary); font-size: 0.9rem;">
+            <option value="">-- Choose from 73 Catalog Appliances or Enter Custom Below --</option>
+            <optgroup label="Cooling & Climate">
+              <option value="Air Conditioner" data-cat="climate" data-img="assets/images/air_conditioner.jpg" data-rent="1799">Air Conditioner</option>
+              <option value="Air Cooler" data-cat="climate" data-img="assets/images/air_cooler.jpg" data-rent="649">Air Cooler</option>
+              <option value="Air Purifier" data-cat="climate" data-img="assets/images/air_purifier.jpg" data-rent="799">Air Purifier</option>
+              <option value="Air Humidifier" data-cat="climate" data-img="assets/images/air_humidifier.jpg" data-rent="549">Air Humidifier</option>
+              <option value="Dehumidifier" data-cat="climate" data-img="assets/images/dehumidifier.jpg" data-rent="899">Dehumidifier</option>
+              <option value="Room Heater" data-cat="climate" data-img="assets/images/room_heater.jpg" data-rent="499">Room Heater</option>
+              <option value="Fan" data-cat="climate" data-img="assets/images/fan.jpg" data-rent="299">Fan</option>
+              <option value="Exhaust Fan" data-cat="climate" data-img="assets/images/exhaust_fan.jpg" data-rent="349">Exhaust Fan</option>
+            </optgroup>
+            <optgroup label="Laundry & Cleaning">
+              <option value="Washing Machine" data-cat="laundry" data-img="assets/images/washing_machine.jpg" data-rent="1199">Washing Machine</option>
+              <option value="Clothes Dryer" data-cat="laundry" data-img="assets/images/clothes_dryer.jpg" data-rent="999">Clothes Dryer</option>
+              <option value="Vacuum Cleaner" data-cat="laundry" data-img="assets/images/vacuum_cleaner.jpg" data-rent="699">Vacuum Cleaner</option>
+              <option value="Robot Vacuum Cleaner" data-cat="laundry" data-img="assets/images/robot_vacuum_cleaner.jpg" data-rent="1299">Robot Vacuum Cleaner</option>
+              <option value="Steam Cleaner" data-cat="laundry" data-img="assets/images/steam_cleaner.jpg" data-rent="599">Steam Cleaner</option>
+              <option value="Floor Cleaner" data-cat="laundry" data-img="assets/images/floor_cleaner.jpg" data-rent="749">Floor Cleaner</option>
+              <option value="Iron" data-cat="laundry" data-img="assets/images/iron.jpg" data-rent="249">Iron</option>
+              <option value="Garment Steamer" data-cat="laundry" data-img="assets/images/garment_steamer.jpg" data-rent="499">Garment Steamer</option>
+            </optgroup>
+            <optgroup label="Kitchen Appliances">
+              <option value="Refrigerator" data-cat="kitchen" data-img="assets/images/refrigerator.jpg" data-rent="1499">Refrigerator</option>
+              <option value="Deep Freezer" data-cat="kitchen" data-img="assets/images/deep_freezer.jpg" data-rent="1199">Deep Freezer</option>
+              <option value="Microwave Oven" data-cat="kitchen" data-img="assets/images/microwave_oven.jpg" data-rent="599">Microwave Oven</option>
+              <option value="OTG Oven" data-cat="kitchen" data-img="assets/images/otg_oven.jpg" data-rent="649">OTG Oven</option>
+              <option value="Electric Oven" data-cat="kitchen" data-img="assets/images/electric_oven.jpg" data-rent="899">Electric Oven</option>
+              <option value="Dishwasher" data-cat="kitchen" data-img="assets/images/dishwasher.jpg" data-rent="1299">Dishwasher</option>
+              <option value="Mixer Grinder" data-cat="kitchen" data-img="assets/images/mixer_grinder.jpg" data-rent="449">Mixer Grinder</option>
+              <option value="Blender" data-cat="kitchen" data-img="assets/images/blender.jpg" data-rent="499">Blender</option>
+              <option value="Food Processor" data-cat="kitchen" data-img="assets/images/food_processor.jpg" data-rent="699">Food Processor</option>
+              <option value="Juicer" data-cat="kitchen" data-img="assets/images/juicer.jpg" data-rent="449">Juicer</option>
+              <option value="Electric Kettle" data-cat="kitchen" data-img="assets/images/electric_kettle.jpg" data-rent="299">Electric Kettle</option>
+              <option value="Toaster" data-cat="kitchen" data-img="assets/images/toaster.jpg" data-rent="299">Toaster</option>
+              <option value="Sandwich Maker" data-cat="kitchen" data-img="assets/images/sandwich_maker.jpg" data-rent="349">Sandwich Maker</option>
+              <option value="Coffee Maker" data-cat="kitchen" data-img="assets/images/coffee_maker.jpg" data-rent="799">Coffee Maker</option>
+              <option value="Electric Rice Cooker" data-cat="kitchen" data-img="assets/images/electric_rice_cooker.jpg" data-rent="449">Electric Rice Cooker</option>
+              <option value="Induction Cooktop" data-cat="kitchen" data-img="assets/images/induction_cooktop.jpg" data-rent="549">Induction Cooktop</option>
+              <option value="Electric Stove" data-cat="kitchen" data-img="assets/images/electric_stove.jpg" data-rent="599">Electric Stove</option>
+              <option value="Air Fryer" data-cat="kitchen" data-img="assets/images/air_fryer.jpg" data-rent="699">Air Fryer</option>
+              <option value="Electric Tandoor" data-cat="kitchen" data-img="assets/images/electric_tandoor.jpg" data-rent="749">Electric Tandoor</option>
+              <option value="Water Purifier" data-cat="kitchen" data-img="assets/images/water_purifier.jpg" data-rent="749">Water Purifier</option>
+              <option value="Kitchen Chimney / Kitchen Hood" data-cat="kitchen" data-img="assets/images/kitchen_chimney.jpg" data-rent="899">Kitchen Chimney / Kitchen Hood</option>
+            </optgroup>
+            <optgroup label="Water & Bathroom">
+              <option value="Geyser / Water Heater" data-cat="climate" data-img="assets/images/geyser_water_heater.jpg" data-rent="699">Geyser / Water Heater</option>
+              <option value="Water Dispenser" data-cat="living" data-img="assets/images/water_dispenser.jpg" data-rent="599">Water Dispenser</option>
+              <option value="Electric Shower" data-cat="living" data-img="assets/images/electric_shower.jpg" data-rent="499">Electric Shower</option>
+            </optgroup>
+            <optgroup label="Entertainment & Electronics">
+              <option value="Television" data-cat="living" data-img="assets/images/television.jpg" data-rent="1299">Television</option>
+              <option value="Smart TV" data-cat="living" data-img="assets/images/smart_tv.jpg" data-rent="1699">Smart TV</option>
+              <option value="Home Theater" data-cat="living" data-img="assets/images/home_theater.jpg" data-rent="1499">Home Theater</option>
+              <option value="Soundbar" data-cat="living" data-img="assets/images/soundbar.jpg" data-rent="599">Soundbar</option>
+              <option value="Speakers" data-cat="living" data-img="assets/images/speakers.jpg" data-rent="449">Speakers</option>
+              <option value="DVD/Blu-ray Player" data-cat="living" data-img="assets/images/dvd_bluray_player.jpg" data-rent="349">DVD/Blu-ray Player</option>
+              <option value="Set-Top Box" data-cat="living" data-img="assets/images/set_top_box.jpg" data-rent="249">Set-Top Box</option>
+            </optgroup>
+            <optgroup label="Bedroom & Personal Comfort">
+              <option value="Electric Blanket" data-cat="living" data-img="assets/images/electric_blanket.jpg" data-rent="449">Electric Blanket</option>
+              <option value="Mattress Warmer" data-cat="living" data-img="assets/images/mattress_warmer.jpg" data-rent="499">Mattress Warmer</option>
+              <option value="Hair Dryer" data-cat="living" data-img="assets/images/hair_dryer.jpg" data-rent="249">Hair Dryer</option>
+              <option value="Hair Straightener" data-cat="living" data-img="assets/images/hair_straightener.jpg" data-rent="299">Hair Straightener</option>
+              <option value="Electric Shaver" data-cat="living" data-img="assets/images/electric_shaver.jpg" data-rent="349">Electric Shaver</option>
+              <option value="Electric Toothbrush" data-cat="living" data-img="assets/images/electric_toothbrush.jpg" data-rent="299">Electric Toothbrush</option>
+              <option value="Massage Chair" data-cat="living" data-img="assets/images/massage_chair.jpg" data-rent="2499">Massage Chair</option>
+            </optgroup>
+            <optgroup label="Home & Utility">
+              <option value="Sewing Machine" data-cat="living" data-img="assets/images/sewing_machine.jpg" data-rent="599">Sewing Machine</option>
+              <option value="Inverter / Home UPS" data-cat="living" data-img="assets/images/inverter_home_ups.jpg" data-rent="899">Inverter / Home UPS</option>
+              <option value="Voltage Stabilizer" data-cat="living" data-img="assets/images/voltage_stabilizer.jpg" data-rent="299">Voltage Stabilizer</option>
+              <option value="Emergency Light" data-cat="living" data-img="assets/images/emergency_light.jpg" data-rent="249">Emergency Light</option>
+              <option value="Electric Mosquito Repellent" data-cat="living" data-img="assets/images/electric_mosquito_repellent.jpg" data-rent="199">Electric Mosquito Repellent</option>
+              <option value="Smart Plug" data-cat="living" data-img="assets/images/smart_plug.jpg" data-rent="199">Smart Plug</option>
+              <option value="Smart Light" data-cat="living" data-img="assets/images/smart_light.jpg" data-rent="249">Smart Light</option>
+              <option value="Smart Home Hub" data-cat="living" data-img="assets/images/smart_home_hub.jpg" data-rent="499">Smart Home Hub</option>
+            </optgroup>
+            <optgroup label="Small Kitchen Appliances">
+              <option value="Egg Boiler" data-cat="kitchen" data-img="assets/images/egg_boiler.jpg" data-rent="299">Egg Boiler</option>
+              <option value="Hand Blender" data-cat="kitchen" data-img="assets/images/hand_blender.jpg" data-rent="399">Hand Blender</option>
+              <option value="Electric Chopper" data-cat="kitchen" data-img="assets/images/electric_chopper.jpg" data-rent="399">Electric Chopper</option>
+              <option value="Electric Beater" data-cat="kitchen" data-img="assets/images/electric_beater.jpg" data-rent="349">Electric Beater</option>
+              <option value="Waffle Maker" data-cat="kitchen" data-img="assets/images/waffle_maker.jpg" data-rent="449">Waffle Maker</option>
+              <option value="Popcorn Maker" data-cat="kitchen" data-img="assets/images/popcorn_maker.jpg" data-rent="399">Popcorn Maker</option>
+              <option value="Roti / Chapati Maker" data-cat="kitchen" data-img="assets/images/roti_chapati_maker.jpg" data-rent="499">Roti / Chapati Maker</option>
+              <option value="Bread Maker" data-cat="kitchen" data-img="assets/images/bread_maker.jpg" data-rent="799">Bread Maker</option>
+              <option value="Ice Maker" data-cat="kitchen" data-img="assets/images/ice_maker.jpg" data-rent="899">Ice Maker</option>
+              <option value="Electric Grill" data-cat="kitchen" data-img="assets/images/electric_grill.jpg" data-rent="649">Electric Grill</option>
+              <option value="Barbecue Grill" data-cat="kitchen" data-img="assets/images/barbecue_grill.jpg" data-rent="999">Barbecue Grill</option>
+            </optgroup>
+          </select>
+        </div>
+
+        <!-- Row 1: Appliance Name / Model -->
+        <div class="form-group" style="display: flex; flex-direction: column; gap: 0.35rem;">
+          <label for="vmodal-title" style="font-size: 0.72rem; font-weight: 700; letter-spacing: 0.08em; text-transform: uppercase; color: var(--text-secondary);">APPLIANCE NAME / MODEL</label>
+          <input type="text" id="vmodal-title" class="form-input" required placeholder="e.g. Smart Double-Door Refrigerator" style="width: 100%; padding: 0.8rem 1rem; border-radius: 12px; border: 1.5px solid var(--border-color); background: var(--bg-primary); color: var(--text-primary); font-size: 0.9rem;">
+        </div>
+
+        <!-- Row 2: Category & Brand (2 columns) -->
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem;">
+          <div class="form-group" style="display: flex; flex-direction: column; gap: 0.35rem;">
+            <label for="vmodal-category" style="font-size: 0.72rem; font-weight: 700; letter-spacing: 0.08em; text-transform: uppercase; color: var(--text-secondary);">CATEGORY</label>
+            <select id="vmodal-category" class="form-input" required style="width: 100%; padding: 0.8rem 1rem; border-radius: 12px; border: 1.5px solid var(--border-color); background: var(--bg-primary); color: var(--text-primary); font-size: 0.9rem;">
+              <option value="kitchen">Kitchen · Refrigerators & Ovens</option>
+              <option value="laundry">Laundry · Washers & Dryers</option>
+              <option value="climate">Climate · AC & Air Purifiers</option>
+              <option value="living">Smart Living · Home Tech</option>
+            </select>
+          </div>
+          <div class="form-group" style="display: flex; flex-direction: column; gap: 0.35rem;">
+            <label for="vmodal-brand" style="font-size: 0.72rem; font-weight: 700; letter-spacing: 0.08em; text-transform: uppercase; color: var(--text-secondary);">BRAND / MANUFACTURER</label>
+            <input type="text" id="vmodal-brand" class="form-input" placeholder="e.g. LG ThinQ / Samsung" style="width: 100%; padding: 0.8rem 1rem; border-radius: 12px; border: 1.5px solid var(--border-color); background: var(--bg-primary); color: var(--text-primary); font-size: 0.9rem;">
+          </div>
+        </div>
+
+        <!-- Row 3: Rent, Deposit, Stock (3 columns) -->
+        <div style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 0.8rem;">
+          <div class="form-group" style="display: flex; flex-direction: column; gap: 0.35rem;">
+            <label for="vmodal-rent" style="font-size: 0.72rem; font-weight: 700; letter-spacing: 0.08em; text-transform: uppercase; color: var(--text-secondary);">MONTHLY RENT (₹)</label>
+            <input type="number" id="vmodal-rent" class="form-input" required placeholder="1499" min="1" style="width: 100%; padding: 0.8rem 1rem; border-radius: 12px; border: 1.5px solid var(--border-color); background: var(--bg-primary); color: var(--text-primary); font-size: 0.9rem;">
+          </div>
+          <div class="form-group" style="display: flex; flex-direction: column; gap: 0.35rem;">
+            <label for="vmodal-deposit" style="font-size: 0.72rem; font-weight: 700; letter-spacing: 0.08em; text-transform: uppercase; color: var(--text-secondary);">SECURITY DEPOSIT (₹)</label>
+            <input type="number" id="vmodal-deposit" class="form-input" placeholder="2000" min="0" style="width: 100%; padding: 0.8rem 1rem; border-radius: 12px; border: 1.5px solid var(--border-color); background: var(--bg-primary); color: var(--text-primary); font-size: 0.9rem;">
+          </div>
+          <div class="form-group" style="display: flex; flex-direction: column; gap: 0.35rem;">
+            <label for="vmodal-stock" style="font-size: 0.72rem; font-weight: 700; letter-spacing: 0.08em; text-transform: uppercase; color: var(--text-secondary);">INITIAL STOCK UNITS</label>
+            <input type="number" id="vmodal-stock" class="form-input" placeholder="10" min="1" value="10" style="width: 100%; padding: 0.8rem 1rem; border-radius: 12px; border: 1.5px solid var(--border-color); background: var(--bg-primary); color: var(--text-primary); font-size: 0.9rem;">
+          </div>
+        </div>
+
+        <!-- Row 4: Image Configuration: Predefined or Custom Upload -->
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem;">
+          <div class="form-group" style="display: flex; flex-direction: column; gap: 0.35rem;">
+            <label for="vmodal-image" style="font-size: 0.72rem; font-weight: 700; letter-spacing: 0.08em; text-transform: uppercase; color: var(--text-secondary);">PREDEFINED IMAGE ASSET</label>
+            <input type="text" id="vmodal-image" class="form-input" required value="assets/images/smart_refrigerator.jpg" style="width: 100%; padding: 0.8rem 1rem; border-radius: 12px; border: 1.5px solid var(--border-color); background: var(--bg-primary); color: var(--text-primary); font-size: 0.85rem;">
+          </div>
+          <div class="form-group" style="display: flex; flex-direction: column; gap: 0.35rem;">
+            <label for="vmodal-file-upload" style="font-size: 0.72rem; font-weight: 700; letter-spacing: 0.08em; text-transform: uppercase; color: var(--text-secondary);">OR UPLOAD CUSTOM IMAGE</label>
+            <input type="file" id="vmodal-file-upload" accept="image/*" class="form-input" style="width: 100%; padding: 0.5rem 0.8rem; border-radius: 12px; border: 1.5px solid var(--border-color); background: var(--bg-primary); font-size: 0.8rem;">
+          </div>
+        </div>
+
+        <!-- Image Live Preview Box -->
+        <div id="vmodal-img-preview-box" style="display: flex; align-items: center; gap: 1rem; padding: 0.7rem 1rem; background: var(--bg-tertiary); border-radius: 14px; border: 1px solid var(--border-color);">
+          <img id="vmodal-preview-img" src="assets/images/smart_refrigerator.jpg" alt="Preview" style="width: 60px; height: 45px; object-fit: cover; border-radius: 8px; border: 1px solid var(--border-color);">
+          <div style="display: flex; flex-direction: column;">
+            <span style="font-size: 0.75rem; font-weight: 700; color: var(--accent-primary);">Active Appliance Image Reference</span>
+            <span id="vmodal-preview-label" style="font-size: 0.72rem; color: var(--text-secondary);">assets/images/smart_refrigerator.jpg</span>
+          </div>
+        </div>
+
+        <!-- Row 4.5: Vendor Locality, Contact & Address (Mandatory) -->
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem;">
+          <div class="form-group" style="display: flex; flex-direction: column; gap: 0.35rem;">
+            <label for="vmodal-locality" style="font-size: 0.72rem; font-weight: 700; letter-spacing: 0.08em; text-transform: uppercase; color: var(--accent-secondary);">APPLIANCE LOCALITY (HYDERABAD) *</label>
+            <select id="vmodal-locality" class="form-input" required style="width: 100%; padding: 0.8rem 1rem; border-radius: 12px; border: 1.5px solid var(--border-color); background: var(--bg-primary); color: var(--text-primary); font-size: 0.9rem;">
+              <option value="Gachibowli">Gachibowli</option>
+              <option value="Madhapur">Madhapur</option>
+              <option value="Kondapur">Kondapur</option>
+              <option value="Hitech City">Hitech City</option>
+              <option value="Kukatpally">Kukatpally</option>
+              <option value="Miyapur">Miyapur</option>
+              <option value="Jubilee Hills">Jubilee Hills</option>
+              <option value="Banjara Hills">Banjara Hills</option>
+              <option value="Ameerpet">Ameerpet</option>
+              <option value="Begumpet">Begumpet</option>
+              <option value="Secunderabad">Secunderabad</option>
+              <option value="Uppal">Uppal</option>
+              <option value="LB Nagar">LB Nagar</option>
+              <option value="Mehdipatnam">Mehdipatnam</option>
+              <option value="Manikonda">Manikonda</option>
+              <option value="Narsingi">Narsingi</option>
+              <option value="Attapur">Attapur</option>
+              <option value="Dilsukhnagar">Dilsukhnagar</option>
+              <option value="Tarnaka">Tarnaka</option>
+              <option value="Nacharam">Nacharam</option>
+            </select>
+          </div>
+          <div class="form-group" style="display: flex; flex-direction: column; gap: 0.35rem;">
+            <label for="vmodal-phone" style="font-size: 0.72rem; font-weight: 700; letter-spacing: 0.08em; text-transform: uppercase; color: var(--text-secondary);">VENDOR PHONE NUMBER (10 DIGITS) *</label>
+            <input type="tel" id="vmodal-phone" class="form-input" required placeholder="e.g. 9876543210" pattern="[0-9]{10}" title="Please enter a 10-digit phone number" style="width: 100%; padding: 0.8rem 1rem; border-radius: 12px; border: 1.5px solid var(--border-color); background: var(--bg-primary); color: var(--text-primary); font-size: 0.9rem;">
+          </div>
+        </div>
+        <div class="form-group" style="display: flex; flex-direction: column; gap: 0.35rem;">
+          <label for="vmodal-address" style="font-size: 0.72rem; font-weight: 700; letter-spacing: 0.08em; text-transform: uppercase; color: var(--text-secondary);">VENDOR DETAILED ADDRESS *</label>
+          <input type="text" id="vmodal-address" class="form-input" required placeholder="e.g. Gachibowli, Hyderabad, Telangana" style="width: 100%; padding: 0.8rem 1rem; border-radius: 12px; border: 1.5px solid var(--border-color); background: var(--bg-primary); color: var(--text-primary); font-size: 0.9rem;">
+        </div>
+
+        <!-- Row 5: Description -->
+        <div class="form-group" style="display: flex; flex-direction: column; gap: 0.35rem;">
+          <label for="vmodal-desc" style="font-size: 0.72rem; font-weight: 700; letter-spacing: 0.08em; text-transform: uppercase; color: var(--text-secondary);">PRODUCT DESCRIPTION & SPECIFICATIONS</label>
+          <textarea id="vmodal-desc" class="form-input" required placeholder="5-Star BEE energy rating, inverter compressor, AI freshness sensor, free installation within 24 hours..." style="width: 100%; padding: 0.8rem 1rem; border-radius: 12px; border: 1.5px solid var(--border-color); background: var(--bg-primary); color: var(--text-primary); height: 85px; resize: vertical; font-size: 0.88rem;"></textarea>
+        </div>
+
+        <!-- Row 6: Submit Button -->
+        <button type="submit" id="vmodal-submit-btn" class="submit-btn" style="width: 100%; padding: 0.95rem; background: var(--accent-primary); color: white; border: none; border-radius: 14px; font-weight: 700; font-size: 0.95rem; letter-spacing: 0.04em; margin-top: 0.4rem; display: flex; align-items: center; justify-content: center; gap: 0.5rem; transition: all 0.3s; cursor: pointer;">
+          🚀 PUBLISH APPLIANCE TO CATALOG • LIVE IN FLEET
+        </button>
+      </form>
+    </div>
+  </div>
+
+  <!-- --- AUTHENTICATION MODAL (LOGIN & REGISTER) --- -->
+  <div class="checkout-overlay" id="auth-modal">
+    <div class="checkout-container auth-modal-container" style="max-width: 480px; position: relative;">
+      <button id="auth-modal-close" class="close-btn" style="position: absolute; top: 15px; right: 15px; z-index: 10;" aria-label="Close Authentication">&times;</button>
+      
+      <div style="text-align: center; margin-bottom: 1.5rem;">
+        <div style="display: inline-flex; align-items: center; justify-content: center; width: 56px; height: 56px; background: rgba(30, 63, 32, 0.1); border-radius: 50%; color: var(--accent-primary); margin-bottom: 0.8rem;">
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="28" height="28" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/>
+            <polyline points="9 22 9 12 15 12 15 22"/>
+          </svg>
+        </div>
+        <h2 style="font-size: 1.6rem; color: var(--accent-primary); margin-bottom: 0.3rem;">Welcome to HomeRent AI</h2>
+        <p id="auth-subtitle" style="font-size: 0.85rem; color: var(--text-secondary);">Select role to sign in to your account</p>
+      </div>
+
+      <!-- Role Selector Tabs -->
+      <div class="auth-tabs" style="display: flex; gap: 0.5rem; background: var(--bg-tertiary); padding: 4px; border-radius: 14px; margin-bottom: 1.2rem;">
+        <button type="button" class="auth-tab active" data-role="customer" id="tab-auth-customer" style="flex: 1; padding: 0.6rem 0.8rem; border-radius: 10px; border: none; font-family: inherit; font-size: 0.82rem; font-weight: 600; cursor: pointer; transition: all 0.2s; background: var(--bg-secondary); color: var(--text-primary); box-shadow: var(--shadow-sm); display: flex; align-items: center; justify-content: center; gap: 0.4rem;">
+          <svg xmlns="http://www.w3.org/2000/svg" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path>
+            <circle cx="12" cy="7" r="4"></circle>
+          </svg>
+          Customer Login
+        </button>
+        <button type="button" class="auth-tab" data-role="vendor" id="tab-auth-vendor" style="flex: 1; padding: 0.6rem 0.8rem; border-radius: 10px; border: none; font-family: inherit; font-size: 0.82rem; font-weight: 600; cursor: pointer; transition: all 0.2s; background: transparent; color: var(--text-secondary); display: flex; align-items: center; justify-content: center; gap: 0.4rem;">
+          <svg xmlns="http://www.w3.org/2000/svg" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <rect x="2" y="3" width="20" height="14" rx="2" ry="2"></rect>
+            <line x1="8" y1="21" x2="16" y2="21"></line>
+            <line x1="12" y1="17" x2="12" y2="21"></line>
+          </svg>
+          Vendor Login
+        </button>
+      </div>
+
+      <!-- Quick Demo Credentials Banner -->
+      <div style="background: rgba(197, 160, 89, 0.12); border: 1px dashed var(--accent-gold); padding: 0.75rem 1rem; border-radius: 12px; margin-bottom: 1.2rem; display: flex; align-items: center; justify-content: space-between; gap: 0.5rem;">
+        <span style="font-size: 0.78rem; font-weight: 600; color: var(--text-primary);">⚡ Quick Fill Demo:</span>
+        <div style="display: flex; gap: 0.4rem;">
+          <button type="button" id="fill-customer-demo" class="btn-secondary" style="padding: 0.3rem 0.6rem; font-size: 0.72rem; border-radius: 6px; font-weight: 600;">Customer</button>
+          <button type="button" id="fill-vendor-demo" class="btn-secondary" style="padding: 0.3rem 0.6rem; font-size: 0.72rem; border-radius: 6px; font-weight: 600;">Vendor</button>
+        </div>
+      </div>
+
+      <!-- Auth Form -->
+      <form id="auth-form" class="form-grid" style="display: flex; flex-direction: column; gap: 1rem;">
+        <input type="hidden" id="auth-role" value="customer">
+        <input type="hidden" id="auth-mode" value="login">
+
+        <div class="form-group" id="group-auth-name" style="display: none;">
+          <label for="auth-name">Full Name / Vendor Store Name</label>
+          <input type="text" id="auth-name" class="form-input" placeholder="Aarav Sharma">
+        </div>
+
+        <div class="form-group">
+          <label for="auth-email">Email Address</label>
+          <input type="email" id="auth-email" class="form-input" required placeholder="customer@homerent.ai">
+        </div>
+
+        <div class="form-group">
+          <label for="auth-password">Password</label>
+          <input type="password" id="auth-password" class="form-input" required placeholder="••••••••">
+        </div>
+
+        <div id="auth-error-msg" style="display: none; background: rgba(231, 76, 60, 0.1); border: 1px solid #e74c3c; color: #e74c3c; padding: 0.6rem 0.8rem; border-radius: 8px; font-size: 0.8rem; text-align: center;"></div>
+
+        <button type="submit" id="auth-submit-btn" class="btn-primary" style="width: 100%; padding: 0.8rem; border-radius: 12px; font-weight: 600; font-size: 0.95rem; margin-top: 0.4rem;">
+          Sign In as Customer
+        </button>
+
+        <div style="text-align: center; margin-top: 0.5rem; font-size: 0.82rem; color: var(--text-secondary);">
+          <span id="auth-mode-text">Don't have an account?</span>
+          <a href="#" id="auth-toggle-link" style="color: var(--accent-primary); font-weight: 600; margin-left: 0.3rem; text-decoration: underline;">Create Account</a>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- --- BOOKING CONFIRMATION & CASH ON DELIVERY RENTAL RECEIPT MODAL --- -->
+  <div class="receipt-modal-overlay" id="booking-receipt-modal" aria-hidden="true">
+    <div class="receipt-modal-container" style="max-width: 680px;">
+      <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.2rem;">
+        <div style="display: flex; align-items: center; gap: 0.6rem;">
+          <span style="font-size: 1.6rem;">📜</span>
+          <div>
+            <h2 style="font-size: 1.35rem; color: var(--accent-primary); margin: 0;">Official Cash on Delivery Rental Receipt</h2>
+            <div style="font-size: 0.78rem; color: var(--text-secondary); margin-top: 0.15rem;">HomeRent AI Verified Transaction</div>
+          </div>
+        </div>
+        <button id="close-receipt-modal-btn" class="close-btn" style="position: static; font-size: 1.8rem;" aria-label="Close Receipt">&times;</button>
+      </div>
+
+      <!-- Printable Card -->
+      <div class="receipt-card" id="printable-receipt-card" style="border: 1.5px solid var(--border-color); border-radius: 16px; padding: 1.6rem; background: var(--card-bg);">
+        <!-- Receipt Header -->
+        <div style="display: flex; justify-content: space-between; align-items: flex-start; border-bottom: 2px solid var(--border-color); padding-bottom: 1rem; margin-bottom: 1rem; flex-wrap: wrap; gap: 0.8rem;">
+          <div>
+            <div style="font-size: 1.4rem; font-weight: 800; color: var(--accent-primary); letter-spacing: -0.02em;">HomeRent AI</div>
+            <div style="font-size: 0.76rem; color: var(--text-secondary); margin-top: 0.15rem;">Household Appliance Rental Management System</div>
+          </div>
+          <div style="text-align: right;">
+            <div style="font-size: 0.72rem; text-transform: uppercase; letter-spacing: 0.08em; color: var(--text-secondary);">Receipt No.</div>
+            <div id="receipt-number" style="font-family: monospace; font-size: 0.95rem; font-weight: 800; color: var(--accent-gold);">REC-COD-0000000</div>
+          </div>
+        </div>
+
+        <!-- COD Mandatory Payment Notice Banner -->
+        <div style="background: linear-gradient(135deg, rgba(212, 163, 115, 0.18), rgba(46, 204, 113, 0.15)); border: 1.5px solid var(--accent-gold); border-radius: 12px; padding: 0.9rem 1.1rem; margin-bottom: 1.2rem; text-align: center;">
+          <div style="font-size: 0.92rem; font-weight: 800; color: var(--accent-primary);">
+            💵 Please pay the total amount in cash when the appliance is delivered.
+          </div>
+          <div style="font-size: 0.78rem; color: var(--text-secondary); margin-top: 0.25rem;">
+            Do not make any upfront online transfer. Payment status will be confirmed as Paid upon physical cash collection.
+          </div>
+        </div>
+
+        <!-- Section 1: Customer & Order Overview -->
+        <div class="receipt-section-title">1. Customer &amp; Order Information</div>
+        <div class="receipt-row">
+          <span class="label">Customer Name</span>
+          <span class="value" id="receipt-customer-name" style="font-weight: 700;">-</span>
+        </div>
+        <div class="receipt-row">
+          <span class="label">Customer Email</span>
+          <span class="value" id="receipt-customer-email">-</span>
+        </div>
+        <div class="receipt-row">
+          <span class="label">Delivery Address</span>
+          <span class="value" id="receipt-customer-address" style="max-width: 340px; text-align: right;">-</span>
+        </div>
+        <div class="receipt-row">
+          <span class="label">Rental Booking ID</span>
+          <span class="value" id="receipt-booking-id" style="font-family: monospace; color: var(--accent-primary); font-weight: 800;">-</span>
+        </div>
+        <div class="receipt-row">
+          <span class="label">Booking Date</span>
+          <span class="value" id="receipt-booking-date">-</span>
+        </div>
+        <div class="receipt-row">
+          <span class="label">Order Status</span>
+          <span class="value" id="receipt-order-status" style="color: #27ae60; font-weight: 700;">Confirmed</span>
+        </div>
+
+        <!-- Section 2: Appliance & Rental Specifications -->
+        <div class="receipt-section-title" style="margin-top: 1.1rem;">2. Appliance &amp; Rental Tenure Specifications</div>
+        <div class="receipt-row">
+          <span class="label">Appliance Name</span>
+          <span class="value" id="receipt-appliance-name" style="font-weight: 700;">-</span>
+        </div>
+        <div class="receipt-row">
+          <span class="label">Category &amp; Quantity</span>
+          <span class="value"><span id="receipt-category">-</span> • Qty: <strong id="receipt-quantity">1</strong></span>
+        </div>
+        <div class="receipt-row">
+          <span class="label">Rental Tenure / Duration</span>
+          <span class="value" id="receipt-tenure" style="color: var(--accent-gold); font-weight: 700;">-</span>
+        </div>
+        <div class="receipt-row">
+          <span class="label">Rental Start Date</span>
+          <span class="value" id="receipt-start-date">-</span>
+        </div>
+        <div class="receipt-row">
+          <span class="label">Expected Return / End Date</span>
+          <span class="value" id="receipt-end-date">-</span>
+        </div>
+
+        <!-- Section 3: Itemized Charges & COD Breakdown -->
+        <div class="receipt-section-title" style="margin-top: 1.1rem;">3. Itemized Charges &amp; Cash Payable Breakdown</div>
+        <div class="receipt-row">
+          <span class="label">Monthly Rental Rate</span>
+          <span class="value" id="receipt-monthly-price">-</span>
+        </div>
+        <div class="receipt-row">
+          <span class="label">Delivery, Setup &amp; Installation</span>
+          <span class="value" style="color: #27ae60; font-weight: 700;">FREE (₹0)</span>
+        </div>
+        <div class="receipt-row">
+          <span class="label">Security Deposit</span>
+          <span class="value" style="color: #27ae60; font-weight: 700;">₹0 (No Deposit)</span>
+        </div>
+        <div class="receipt-row">
+          <span class="label">Applicable GST / Taxes</span>
+          <span class="value" style="color: var(--text-secondary);">Included</span>
+        </div>
+        <div class="receipt-row">
+          <span class="label">Payment Method</span>
+          <span class="value" style="font-weight: 800; color: var(--accent-primary);">Cash on Delivery (COD)</span>
+        </div>
+        <div class="receipt-row">
+          <span class="label">Payment Status</span>
+          <span class="value" id="receipt-pay-status" style="display: inline-block; background: rgba(197,160,89,.18); color: var(--accent-gold); font-weight: 700; padding: 0.2rem 0.75rem; border-radius: 12px; font-size: 0.8rem;">Pending / Pay on Delivery</span>
+        </div>
+        <div class="receipt-row" style="background: var(--bg-tertiary); padding: 0.75rem 0.9rem; border-radius: 10px; margin-top: 0.5rem; border: 1.5px dashed var(--accent-gold);">
+          <span class="label" style="font-weight: 800; color: var(--text-primary); font-size: 1rem;">Final Total Amount Payable in Cash:</span>
+          <span class="value" id="receipt-total-amount" style="font-size: 1.25rem; color: var(--accent-primary); font-weight: 900;">-</span>
+        </div>
+
+        <!-- Section 4: Authorized Vendor Details -->
+        <div class="receipt-section-title" style="margin-top: 1.1rem;">4. Authorized Vendor &amp; Support Contact</div>
+        <div class="receipt-row">
+          <span class="label">Vendor Name</span>
+          <span class="value" id="receipt-vendor-name">-</span>
+        </div>
+        <div class="receipt-row">
+          <span class="label">Vendor Contact Phone</span>
+          <span class="value" id="receipt-vendor-phone">-</span>
+        </div>
+        <div class="receipt-row">
+          <span class="label">Vendor Hub Address</span>
+          <span class="value" id="receipt-vendor-address" style="max-width: 340px; text-align: right; line-height: 1.3;">-</span>
+        </div>
+
+        <!-- Verification Seal / Note -->
+        <div style="margin-top: 1.2rem; padding-top: 0.8rem; border-top: 1px dashed var(--border-color); font-size: 0.74rem; color: var(--text-secondary); text-align: center;">
+          🛡️ Verified HomeRent AI Transaction • Free Complimentary Maintenance Included • 24/7 Dedicated Support
+        </div>
+      </div>
+
+      <!-- Action Buttons -->
+      <div class="receipt-actions" style="display: flex; gap: 0.8rem; justify-content: flex-end; margin-top: 1.2rem; flex-wrap: wrap;">
+        <button type="button" id="receipt-print-btn" class="btn-secondary" style="padding: 0.65rem 1.2rem; font-size: 0.88rem; font-weight: 600; border-radius: 12px; cursor: pointer; display: inline-flex; align-items: center; gap: 0.4rem;">
+          <span>🖨️</span> Print Receipt
+        </button>
+        <button type="button" id="receipt-download-file-btn" class="btn-primary" style="padding: 0.65rem 1.3rem; font-size: 0.88rem; font-weight: 600; border-radius: 12px; cursor: pointer; display: inline-flex; align-items: center; gap: 0.4rem;">
+          <span>📥</span> Download Receipt
+        </button>
+        <button type="button" id="receipt-done-btn" class="btn-secondary" style="padding: 0.65rem 1.2rem; font-size: 0.88rem; font-weight: 600; border-radius: 12px; cursor: pointer;">
+          Close
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Modal: Add / Edit Dynamic Category -->
+  <div class="checkout-overlay" id="category-modal" style="display: none; align-items: center; justify-content: center; z-index: 1000;">
+    <div class="checkout-container" style="max-width: 520px; width: 92%; padding: 2rem; border-radius: 20px; background: var(--bg-secondary); border: 1px solid var(--border-color); box-shadow: var(--shadow-lg); position: relative;">
+      <button id="category-modal-close" class="close-btn" style="position: absolute; top: 18px; right: 20px; font-size: 1.6rem; cursor: pointer; border: none; background: transparent; color: var(--text-secondary);">&times;</button>
+      <h3 id="category-modal-title" class="font-serif" style="font-size: 1.4rem; color: var(--accent-primary); margin: 0 0 1.2rem;">Add New Category</h3>
+      <form id="category-form" style="display: flex; flex-direction: column; gap: 1rem;">
+        <input type="hidden" id="cat-mode" value="create">
+        <div class="form-group">
+          <label for="cat-identifier" style="font-size: 0.8rem; font-weight: 700; color: var(--text-secondary);">CATEGORY IDENTIFIER (SLUG)</label>
+          <input type="text" id="cat-identifier" class="form-input" required placeholder="e.g. entertainment" style="height: 44px;">
+        </div>
+        <div class="form-group">
+          <label for="cat-display-name" style="font-size: 0.8rem; font-weight: 700; color: var(--text-secondary);">DISPLAY NAME</label>
+          <input type="text" id="cat-display-name" class="form-input" required placeholder="e.g. Smart Entertainment" style="height: 44px;">
+        </div>
+        <div class="form-group">
+          <label for="cat-icon" style="font-size: 0.8rem; font-weight: 700; color: var(--text-secondary);">ICON (EMOJI)</label>
+          <input type="text" id="cat-icon" class="form-input" required placeholder="e.g. 📺" style="height: 44px;" maxlength="4">
+        </div>
+        <div class="form-group">
+          <label for="cat-description" style="font-size: 0.8rem; font-weight: 700; color: var(--text-secondary);">DESCRIPTION</label>
+          <textarea id="cat-description" class="form-input" style="height: 70px; resize: vertical;" placeholder="Category details and appliance types included..."></textarea>
+        </div>
+        <div class="form-group" style="display: flex; align-items: center; gap: 0.6rem;">
+          <input type="checkbox" id="cat-is-active" checked style="width: 18px; height: 18px; cursor: pointer;">
+          <label for="cat-is-active" style="font-size: 0.88rem; font-weight: 600; cursor: pointer;">Active in Customer Catalog</label>
+        </div>
+        <div style="display: flex; gap: 0.8rem; justify-content: flex-end; margin-top: 0.5rem;">
+          <button type="button" id="cat-modal-cancel" class="btn-secondary" style="padding: 0.6rem 1.2rem; border-radius: 10px;">Cancel</button>
+          <button type="submit" id="cat-modal-save" class="btn-primary" style="padding: 0.6rem 1.4rem; border-radius: 10px;">Save Category</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- Modal: Vendor Action on Return Request -->
+  <div class="checkout-overlay" id="return-action-modal" style="display: none; align-items: center; justify-content: center; z-index: 1000;">
+    <div class="checkout-container" style="max-width: 520px; width: 92%; padding: 2rem; border-radius: 20px; background: var(--bg-secondary); border: 1px solid var(--border-color); box-shadow: var(--shadow-lg); position: relative;">
+      <button id="return-action-modal-close" class="close-btn" style="position: absolute; top: 18px; right: 20px; font-size: 1.6rem; cursor: pointer; border: none; background: transparent; color: var(--text-secondary);">&times;</button>
+      <h3 id="return-action-modal-title" class="font-serif" style="font-size: 1.4rem; color: var(--accent-primary); margin: 0 0 1rem;">Respond to Return Request</h3>
+      <div id="return-action-details" style="background: var(--bg-primary); padding: 1rem; border-radius: 12px; margin-bottom: 1.2rem; font-size: 0.85rem; border: 1px solid var(--border-color);">
+        <!-- Summary populated here -->
+      </div>
+      <form id="return-action-form" style="display: flex; flex-direction: column; gap: 1rem;">
+        <input type="hidden" id="return-action-request-id" value="">
+        <input type="hidden" id="return-action-type" value="accept">
+
+        <div class="form-group" id="return-pickup-date-group">
+          <label for="return-action-pickup-date" style="font-size: 0.8rem; font-weight: 700; color: var(--text-secondary);">CONFIRMED PICKUP DATE *</label>
+          <input type="date" id="return-action-pickup-date" class="form-input" style="height: 44px;">
+        </div>
+
+        <div class="form-group">
+          <label for="return-action-note" id="return-action-note-label" style="font-size: 0.8rem; font-weight: 700; color: var(--text-secondary);">VENDOR RESPONSE / INSTRUCTIONS *</label>
+          <textarea id="return-action-note" class="form-input" required style="height: 80px; resize: vertical;" placeholder="Provide instructions or explanation for the customer..."></textarea>
+        </div>
+
+        <div style="display: flex; gap: 0.8rem; justify-content: flex-end; margin-top: 0.5rem;">
+          <button type="button" id="return-action-cancel" class="btn-secondary" style="padding: 0.6rem 1.2rem; border-radius: 10px;">Cancel</button>
+          <button type="submit" id="return-action-submit" class="btn-primary" style="padding: 0.6rem 1.4rem; border-radius: 10px;">Submit Response</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- --- TOAST NOTIFICATIONS CONTAINER --- -->
+  <div class="toast-container" id="toast-container"></div>
+
+  <!-- --- RAZORPAY PAYMENT GATEWAY SDK --- -->
+  <script src="https://checkout.razorpay.com/v1/checkout.js"></script>
+
+  <!-- --- JS INTERACTION SCRIPT --- -->
+  <script src="app.js"></script>
+</body>
+</html>

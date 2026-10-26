@@ -1,0 +1,7 @@
+Flask
+pymongo
+razorpay
+numpy
+scikit-learn>=1.4
+tensorflow
+gunicorn
